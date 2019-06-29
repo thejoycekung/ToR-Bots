@@ -1,4 +1,5 @@
 praw
-pymysql
+asyncpg
 discord.py
 matplotlib
+buttons

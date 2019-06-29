@@ -1,0 +1,14 @@
+version: '3.1'
+
+services:
+    reddit_stats:
+        build: ./reddit_stats
+        restart: unless-stopped
+    charlie:
+        build: ./charlie
+        restart: unless-stopped
+    stats_bot:
+        build: ./stats_bot
+        restart: unless-stopped
+        environment:
+            PYTHONUNBUFFERED: 1

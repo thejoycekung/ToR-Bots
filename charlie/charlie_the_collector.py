@@ -1,76 +1,121 @@
+import asyncio
+import logging
+
 import praw
-import time
 
+import database
 import passwords_and_tokens
-import pymysql
 
-reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
-                     user_agent="Lornebot 0.0.1")
-
-connection = pymysql.connect(host=passwords_and_tokens.sql_ip,
-                             user=passwords_and_tokens.sql_user,
-                             password=passwords_and_tokens.sql_password,
-                             db="torstats",
-                             charset="utf8mb4",
-                             cursorclass=pymysql.cursors.DictCursor,
-                             port=3306)
+reddit = praw.Reddit(
+    client_id=passwords_and_tokens.reddit_id,
+    client_secret=passwords_and_tokens.reddit_token,
+    user_agent="Lornebot 0.0.1",
+)
 
 
-def analyze_trans(trans):
-    try:
-        trans.refresh()
-    except Exception:
+async def analyze_transcription(transcription, refresh_retries=3):
+    for i in range(refresh_retries):
         try:
-            trans.refresh()
+            transcription.refresh()
         except Exception:
-            print("Error in refresh:", trans.id)
+            continue
+        else:
+            break
+    else:
+        logging.info(
+            f"Error in refresh {refresh_retries} times for transcription: "
+            f"{transcription.id}"
+        )
 
-            with connection.cursor() as cursor:
-                cursor.execute("update transcriptions set good_bot = 0, bad_bot = 0, good_human = 0, bad_human = 0, "
-                               "comment_count = 0, upvotes = 0, last_checked = now(), error = true where comment_id = %s",
-                               (trans.id,))
-                connection.commit()
+        async with database.get_connection() as connection:
+            connection.execute(
+                "UPDATE transcriptions SET good_bot = 0, bad_bot = 0, "
+                "good_human = 0, bad_human = 0, comment_count = 0, upvotes = 0, "
+                "last_checked = NOW(), error = true WHERE comment_id = $1",
+                transcription.id,
+            )
             return
 
-    replies = trans.replies
+    replies = transcription.replies
     if replies is None:
-        print("No replies")
+        logging.info(f"No replies to transcription: {transcription.id}")
         return
     replies.replace_more(0)
 
-    comment_count = 0
-    good_bot = 0
-    bad_bot = 0
-    good_human = 0
-    bad_human = 0
+    comment_count = good_bot = bad_bot = good_human = bad_human = 0
 
     for comment in replies:
         comment_count += 1
         content = comment.body.lower()
         if "good bot" in content:
             good_bot += 1
+
         if "bad bot" in content:
             bad_bot += 1
+
         if "good human" in content:
             good_human += 1
+
         if "bad human" in content:
             bad_human += 1
 
-    print(good_bot, bad_bot, good_human, bad_human, comment_count, trans.score)
+    logging.info(
+        f"Stats for transcription {transcription.id}: "
+        f"{good_bot} {bad_bot} {good_human} {bad_human} {comment_count} "
+        f"{transcription.score}"
+    )
 
-    with connection.cursor() as cursor:
-        cursor.execute("update transcriptions set good_bot = %s, bad_bot = %s, good_human = %s, bad_human = %s, "
-                       "comment_count = %s, upvotes = %s, last_checked = now(), error = false where comment_id = %s",
-                       (good_bot, bad_bot, good_human, bad_human, comment_count, trans.score, trans.id))
-    connection.commit()
+    async with database.get_connection() as connection:
+        await connection.execute(
+            "UPDATE transcriptions SET good_bot = $1, bad_bot = $2, good_human = $3, "
+            "bad_human = $4, comment_count = $5, upvotes = $6, last_checked = NOW(), "
+            "error = false WHERE comment_id = $7",
+            good_bot,
+            bad_bot,
+            good_human,
+            bad_human,
+            comment_count,
+            transcription.score,
+            transcription.id,
+        )
+
+
+async def analyze_all_transcriptions():
+    async with database.get_connection() as connection:
+        transcriptions = await connection.fetch(
+            "SELECT comment_id FROM transcriptions WHERE "
+            "EXTRACT(epoch from now()) - EXTRACT(epoch from found) < (24 * 60 * 60) OR "
+            "last_checked IS NULL OR good_bot IS NULL OR bad_bot IS NULL OR "
+            "good_human IS NULL OR bad_human IS NULL ORDER BY last_checked ASC"
+        )
+
+    if transcriptions is None:
+        logging.info("There are no transcriptions to analyze.")
+        return
+
+    transcriptions = [reddit.comment(row["comment_id"]) for row in transcriptions]
+    for transcription in transcriptions:
+        logging.info(
+            f"Analyzing /u/{transcription.author}'s transcription: {transcription.id}"
+        )
+        await analyze_transcription(transcription)
+
+
+async def analyze_loop(timeout=60.0):
+    await analyze_all_transcriptions()
+    await asyncio.sleep(timeout)
 
 
 if __name__ == "__main__":
-    while (True):
-        with connection.cursor() as cursor:
-            cursor.execute("select comment_id from transcriptions where unix_timestamp(now())-unix_timestamp(found) < (24 * 60 * 60) order by last_checked asc")
-            trans_list = [reddit.comment(row["comment_id"]) for row in cursor.fetchall()]
-            for trans in trans_list:
-                print(trans)
-                analyze_trans(trans)
-        time.sleep(60)
+    logging.getLogger().setLevel(logging.INFO)
+
+    loop = asyncio.get_event_loop()
+
+    loop.run_until_complete(database.create_pool())
+
+    try:
+        while True:
+            loop.run_until_complete(analyze_loop())
+    finally:
+        loop.run_until_complete(database.close_pool())
+        loop.close()

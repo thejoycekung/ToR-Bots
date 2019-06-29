@@ -1,2 +1,2 @@
+asyncpg
 praw
-pymysql

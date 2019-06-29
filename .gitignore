@@ -1,6 +1,3 @@
-*__pycache__/
-*passwords_and_tokens.py
-*leaderboard.txt
-*graph.png
-maria/
-*docker-compose.yml
+**/__pycache__/
+**/passwords_and_tokens.py
+**/leaderboard.txt
