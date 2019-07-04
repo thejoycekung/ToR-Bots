@@ -179,14 +179,15 @@ async def find_comments(text, name=None):
         if name is not None:
             comments = await connection.fetch(
                 "SELECT comment_id, content, permalink FROM transcriptions "
-                "WHERE transcriber = $1 AND content LIKE $2",
+                "WHERE transcriber = $1 AND content LIKE %$2%",
                 name,
-                f"%{text}%",
+                text,
             )
         else:
             comments = await connection.fetch(
                 "SELECT comment_id, content, permalink FROM transcriptions "
-                f"WHERE content LIKE $1 %{text}%"
+                "WHERE content LIKE %$1%",
+                text,
             )
 
     return [comment.values() for comment in comments]

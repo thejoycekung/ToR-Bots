@@ -15,6 +15,17 @@ class WhereSession(buttons.Session):
     async def teardown(self):
         self._session_task.cancel()
 
+        try:
+            await self.page.clear_reactions()
+        except discord.Forbidden:
+            for button in self._buttons:
+                try:
+                    await self.page.remove_reaction(button, self.ctx.bot)
+                except discord.HTTPException:
+                    pass
+
+        await self.page.edit("")
+
 
 class WherePaginator(WhereSession, buttons.Paginator):
     async def _paginate(self, ctx: commands.Context):
@@ -32,7 +43,7 @@ class WherePaginator(WhereSession, buttons.Paginator):
             entries = []
 
         entry_count = len(self.entries)
-        for chunk in entries:
+        for i, chunk in enumerate(entries):
             if self.use_embed is False:
                 self._pages.append(self.joiner.join(chunk))
             else:
@@ -46,7 +57,7 @@ class WherePaginator(WhereSession, buttons.Paginator):
                 )
 
                 embed.set_footer(
-                    text=f"Page {self._index}/{pages} ({entry_count} entr{plural})"
+                    text=f"Page {i+1}/{pages} ({entry_count} entr{plural})"
                 )
 
                 if self.thumbnail:

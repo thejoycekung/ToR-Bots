@@ -246,8 +246,8 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             user,
         )
 
-        s = "s" if transcriptions != 0 else ""
-        new_s = "s" if new_transcriptions != 0 else ""
+        s = "s" if transcriptions != 1 else ""
+        new_s = "s" if new_transcriptions != 1 else ""
         logging.info(
             f"Found {transcriptions} total transcription{s}. "
             f"Added {new_transcriptions} new transcription{new_s}."
