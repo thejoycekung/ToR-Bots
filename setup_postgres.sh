@@ -85,5 +85,6 @@ psql -U postgres -d torstats --command "CREATE TABLE IF NOT EXISTS transcription
     bad_human integer DEFAULT 0,
     error boolean DEFAULT FALSE,
     from_archive boolean DEFAULT FALSE,
+    permalink text NOT NULL,
     created timestamp with time zone
 );"

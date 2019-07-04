@@ -1,14 +1,13 @@
 import typing
-# import urllib.parse
 
-# import aiohttp
 import discord
 import praw
-from discord.ext import commands
+from discord.ext import buttons, commands
 
 from .. import passwords_and_tokens
 from ..helpers import add_user, database_reader, get_redditor_name
-from ..utils import Pages
+
+
 from ..utils.converters import Redditor
 
 client_session = None
@@ -364,44 +363,35 @@ class TextCommands(commands.Cog):
 
     @commands.command(hidden=True)
     async def where(self, ctx, *, looking_for):
-        await ctx.send(
-            (
-                "This command has been temporarily disabled due to a "
-                "blocking code issue from rate limits."
-            )
-        )
-        return
 
         redditor_name = get_redditor_name(ctx.message.author.display_name)
-        comments = await database_reader.find_comments(redditor_name, looking_for)
+        comments = await database_reader.find_comments(looking_for, name=redditor_name)
 
         comments_context = find_entries(comments, looking_for)
 
-        await Pages(
-            self.bot, message=ctx.message, entries=comments_context, per_page=5
-        ).paginate(start_page=1)
+        paginator = buttons.Paginator(
+            title=f"Where `{looking_for}`",
+            embed=True,
+            entries=comments_context,
+            length=5,
+        )
+
+        await paginator.start(ctx)
 
     @commands.command(hidden=True)
     async def all_where(self, ctx, *, looking_for):
-        await ctx.send(
-            (
-                "This command has been temporarily disabled due to a "
-                "blocking code issue from rate limits."
-            )
-        )
-        return
-
-        comments = await database_reader.find_comments(
-            get_redditor_name(ctx.message.author.display_name),
-            looking_for,
-            find_all=True,
-        )
+        comments = await database_reader.find_comments(looking_for)
 
         comments_context = find_entries(comments, looking_for)
 
-        await Pages(
-            self.bot, message=ctx.message, entries=comments_context, per_page=5
-        ).paginate(start_page=1)
+        paginator = await buttons.Paginator(
+            title=f"All where `{looking_for}`",
+            embed=True,
+            entries=comments_context,
+            length=5,
+        )
+
+        await paginator.start()
 
     @commands.command()
     async def progress(
@@ -569,8 +559,7 @@ class TextCommands(commands.Cog):
 def find_entries(results, looking_for, offset=10):
     entries = []
 
-    for comment_id, content in results:
-        permalink = reddit.comment(comment_id).permalink
+    for comment_id, content, permalink in results:
         content = content.casefold()
 
         index = content.find(looking_for.lower())

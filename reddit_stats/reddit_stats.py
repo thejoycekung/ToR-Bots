@@ -305,14 +305,15 @@ def is_reference_comment(comment):
 async def add_transcription(user, comment, connection=None):
     statement = (
         "INSERT INTO transcriptions "
-        "(comment_id, transcriber, content, subreddit, found, created) "
-        "VALUES ($1, $2, $3, $4, NOW(), $5) ON CONFLICT DO NOTHING"
+        "(comment_id, transcriber, content, subreddit, found, permalink, created) "
+        "VALUES ($1, $2, $3, $4, NOW(), $5, $6) ON CONFLICT DO NOTHING"
     )
     arguments = (
         comment.id,
         user,
         comment.body,
         comment.subreddit.id,
+        comment.permalink,
         datetime.datetime.fromtimestamp(comment.created),
     )
     if connection is None:
