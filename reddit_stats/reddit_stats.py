@@ -415,6 +415,7 @@ async def announce_gamma(user, before, after):
         await client.http.send_message(
             gammas_channel, f"{reference} just got found! They have {after}Γ"
         )
+        return
 
     if before < 51 <= after:
         await client.http.send_message(

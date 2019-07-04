@@ -1,14 +1,14 @@
+import html
 import typing
 
 import discord
 import praw
-from discord.ext import buttons, commands
+from discord.ext import commands
 
 from .. import passwords_and_tokens
 from ..helpers import add_user, database_reader, get_redditor_name
-
-
 from ..utils.converters import Redditor
+from ..utils.paginator import ToRPaginator
 
 client_session = None
 
@@ -369,7 +369,7 @@ class TextCommands(commands.Cog):
 
         comments_context = find_entries(comments, looking_for)
 
-        paginator = buttons.Paginator(
+        paginator = ToRPaginator(
             title=f"Where `{looking_for}`",
             embed=True,
             entries=comments_context,
@@ -384,14 +384,14 @@ class TextCommands(commands.Cog):
 
         comments_context = find_entries(comments, looking_for)
 
-        paginator = await buttons.Paginator(
+        paginator = ToRPaginator(
             title=f"All where `{looking_for}`",
             embed=True,
             entries=comments_context,
             length=5,
         )
 
-        await paginator.start()
+        await paginator.start(ctx)
 
     @commands.command()
     async def progress(
@@ -556,10 +556,10 @@ class TextCommands(commands.Cog):
         await ctx.send("Pong!")
 
 
-def find_entries(results, looking_for, offset=10):
+def find_entries(results, looking_for, offset=25):
     entries = []
 
-    for comment_id, content, permalink in results:
+    for i, (comment_id, content, permalink) in enumerate(results):
         content = content.casefold()
 
         index = content.find(looking_for.lower())
@@ -568,7 +568,10 @@ def find_entries(results, looking_for, offset=10):
 
         context = content[start:end]
 
-        entries.append([f"https://reddit.com/{permalink}\n```...{context}...```"])
+        entries.append(
+            f"{i+1}. https://reddit.com{html.unescape(permalink)}\n"
+            f"```...{context}...```"
+        )
 
     return entries
 
