@@ -43,7 +43,10 @@ class WherePaginator(WhereSession, buttons.Paginator):
                     title=self.title,
                     description=self.joiner.join(chunk),
                     colour=self.colour,
-                    footer=f"Page {self._index}/{pages} ({entry_count} entr{plural})",
+                )
+
+                embed.set_footer(
+                    text=f"Page {self._index}/{pages} ({entry_count} entr{plural})"
                 )
 
                 if self.thumbnail:
