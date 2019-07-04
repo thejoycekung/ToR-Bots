@@ -1,3 +1,5 @@
+import html
+import math
 import typing
 
 import discord
@@ -6,9 +8,58 @@ from discord.ext import buttons, commands
 
 from .. import passwords_and_tokens
 from ..helpers import add_user, database_reader, get_redditor_name
-
-
 from ..utils.converters import Redditor
+
+
+class WhereSession(buttons.Session):
+    async def teardown(self):
+        self._session_task.cancel()
+
+
+class WherePaginator(WhereSession, buttons.Paginator):
+    async def _paginate(self, ctx: commands.Context):
+        # This is a copy and paste from the buttons.py source code.
+        # The only relevant change is adding the footer.
+        if not self.entries and not self.extra_pages:
+            raise AttributeError(
+                "You must provide at least one entry or page for pagination."
+            )
+
+        if self.entries:
+            self.entries = [self.formatting(entry) for entry in self.entries]
+            entries = list(self.chunker())
+        else:
+            entries = []
+
+        entry_count = len(self.entries)
+        for chunk in entries:
+            if self.use_embed is False:
+                self._pages.append(self.joiner.join(chunk))
+            else:
+                pages = math.ceil(entry_count / self.length) + len(self.extra_pages)
+                plural = "ies" if entry_count != 1 else "y"
+
+                embed = discord.Embed(
+                    title=self.title,
+                    description=self.joiner.join(chunk),
+                    colour=self.colour,
+                    footer=f"Page {self._index}/{pages} ({entry_count} entr{plural})",
+                )
+
+                if self.thumbnail:
+                    embed.set_thumbnail(url=self.thumbnail)
+
+                self._pages.append(embed)
+
+        self._pages = self._pages + self.extra_pages
+
+        if isinstance(self._pages[0], discord.Embed):
+            self.page = await ctx.send(embed=self._pages[0])
+        else:
+            self.page = await ctx.send(self._pages[0])
+
+        self._session_task = ctx.bot.loop.create_task(self._session(ctx))
+
 
 client_session = None
 
@@ -369,7 +420,7 @@ class TextCommands(commands.Cog):
 
         comments_context = find_entries(comments, looking_for)
 
-        paginator = buttons.Paginator(
+        paginator = WherePaginator(
             title=f"Where `{looking_for}`",
             embed=True,
             entries=comments_context,
@@ -384,7 +435,7 @@ class TextCommands(commands.Cog):
 
         comments_context = find_entries(comments, looking_for)
 
-        paginator = await buttons.Paginator(
+        paginator = WherePaginator(
             title=f"All where `{looking_for}`",
             embed=True,
             entries=comments_context,
@@ -556,10 +607,10 @@ class TextCommands(commands.Cog):
         await ctx.send("Pong!")
 
 
-def find_entries(results, looking_for, offset=10):
+def find_entries(results, looking_for, offset=25):
     entries = []
 
-    for comment_id, content, permalink in results:
+    for i, (comment_id, content, permalink) in enumerate(results):
         content = content.casefold()
 
         index = content.find(looking_for.lower())
@@ -568,7 +619,10 @@ def find_entries(results, looking_for, offset=10):
 
         context = content[start:end]
 
-        entries.append([f"https://reddit.com/{permalink}\n```...{context}...```"])
+        entries.append(
+            f"{i+1}. https://reddit.com{html.unescape(permalink)}\n"
+            f"```...{context}...```"
+        )
 
     return entries
 
