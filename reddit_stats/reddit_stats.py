@@ -219,7 +219,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         for comment in reddit_comments:
             if is_transcription(comment):
                 return_value = await add_transcription(
-                    user, first_comment, connection=connection
+                    user, comment, connection=connection
                 )
 
                 transcriptions += 1
