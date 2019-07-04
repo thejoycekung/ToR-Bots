@@ -37,7 +37,7 @@ async def plot_all_history(
         end += datetime.timedelta(days=1)
 
     async with database_reader.get_connection() as connection:
-        rows = await connection.execute(
+        rows = await connection.fetch(
             "SELECT DATE(time) AS day, SUM(gamma) "
             "FROM new_gammas WHERE time BETWEEN $1 AND $2 "
             "GROUP BY DATE(time) ORDER BY DATE(time) ASC;",

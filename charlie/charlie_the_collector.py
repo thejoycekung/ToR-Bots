@@ -28,7 +28,7 @@ async def analyze_transcription(transcription, refresh_retries=3):
         )
 
         async with database.get_connection() as connection:
-            connection.execute(
+            await connection.execute(
                 "UPDATE transcriptions SET good_bot = 0, bad_bot = 0, "
                 "good_human = 0, bad_human = 0, comment_count = 0, upvotes = 0, "
                 "last_checked = NOW(), error = true WHERE comment_id = $1",
@@ -40,6 +40,7 @@ async def analyze_transcription(transcription, refresh_retries=3):
     if replies is None:
         logging.info(f"No replies to transcription: {transcription.id}")
         return
+        
     replies.replace_more(0)
 
     comment_count = good_bot = bad_bot = good_human = bad_human = 0
