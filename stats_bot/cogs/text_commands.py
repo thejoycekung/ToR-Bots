@@ -58,7 +58,7 @@ class WherePaginator(buttons.Paginator):
 
         self._session_task = ctx.bot.loop.create_task(self._session(ctx))
 
-    async def cancel(self,):
+    async def cancel(self, ctx):
         self._cancelled = True
         self._session_task.cancel()
 
