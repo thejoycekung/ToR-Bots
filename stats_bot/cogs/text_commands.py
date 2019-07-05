@@ -11,30 +11,7 @@ from ..helpers import add_user, database_reader, get_redditor_name
 from ..utils.converters import Redditor
 
 
-class WhereSession(buttons.Session):
-    async def teardown(self):
-        self._session_task.cancel()
-
-        print("tearing down")
-        try:
-            await self.page.clear_reactions()
-            print("removed reactions")
-        except discord.Forbidden:
-            print(f"buttons: {self._buttons}")
-            for button in self._buttons:
-                try:
-                    await self.page.remove_reaction(button, self.ctx.bot)
-                except discord.HTTPException:
-                    pass
-
-        print("Editing embed")
-        embed = self.page.embed
-        embed.set_footer(f"{embed.footer} Session Cancelled.")
-
-        await self.page.edit(embed)
-
-
-class WherePaginator(WhereSession, buttons.Paginator):
+class WherePaginator(buttons.Paginator):
     async def _paginate(self, ctx: commands.Context):
         # This is a copy and paste from the buttons.py source code.
         # The only relevant change is adding the footer.
@@ -80,6 +57,28 @@ class WherePaginator(WhereSession, buttons.Paginator):
             self.page = await ctx.send(self._pages[0])
 
         self._session_task = ctx.bot.loop.create_task(self._session(ctx))
+
+    async def cancel(self,):
+        self._cancelled = True
+        self._session_task.cancel()
+
+        print("tearing down")
+        try:
+            await self.page.clear_reactions()
+            print("removed reactions")
+        except discord.Forbidden:
+            print(f"buttons: {self._buttons}")
+            for button in self._buttons:
+                try:
+                    await self.page.remove_reaction(button, self.ctx.bot)
+                except discord.HTTPException:
+                    pass
+
+        print("Editing embed")
+        embed = self.page.embed
+        embed.set_footer(f"{embed.footer} Session Cancelled.")
+
+        await self.page.edit(embed)
 
 
 client_session = None
