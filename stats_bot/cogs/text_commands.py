@@ -59,26 +59,22 @@ class WherePaginator(buttons.Paginator):
         self._session_task = ctx.bot.loop.create_task(self._session(ctx))
 
     async def cancel(self, ctx):
-        self._cancelled = True
-        self._session_task.cancel()
-
-        print("tearing down")
         try:
             await self.page.clear_reactions()
-            print("removed reactions")
         except discord.Forbidden:
-            print(f"buttons: {self._buttons}")
             for button in self._buttons:
                 try:
                     await self.page.remove_reaction(button, self.ctx.bot)
                 except discord.HTTPException:
                     pass
 
-        print("Editing embed")
         embed = self.page.embed
-        embed.set_footer(f"{embed.footer} Session Cancelled.")
+        embed.set_footer(text=f"{embed.footer} Session Cancelled.")
 
-        await self.page.edit(embed)
+        await self.page.edit(embed=embed)
+
+        self._cancelled = True
+        self._session_task.cancel()
 
 
 client_session = None
