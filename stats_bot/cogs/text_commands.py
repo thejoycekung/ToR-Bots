@@ -296,13 +296,18 @@ class TextCommands(commands.Cog):
         all_gamma_count = sum(item["official_gamma_count"] for item in all_gammas)
 
         user_index = next(
-            i
-            for i, item in enumerate(sorted_gammas)
-            if item["name"].casefold() == username.casefold()
+            (
+                i
+                for i, item in enumerate(sorted_gammas)
+                if item["name"].casefold() == username.casefold()
+            ),
+            None,
         )
 
         i = 0
-        while i < len(all_gammas):
+        while i < top_leaderboard_size or (
+            user_index is not None and i < user_index + context
+        ):
             name, official_gamma = sorted_gammas[i]
 
             escaped_name = discord.utils.escape_markdown(name)
@@ -314,11 +319,13 @@ class TextCommands(commands.Cog):
             leaderboard.append(user_row)
 
             # Jump to user component.
-            if i > top_leaderboard_size and user_index + context > top_leaderboard_size:
+            if (
+                i == top_leaderboard_size
+                and user_index is not None
+                and user_index - context > top_leaderboard_size
+            ):
                 i = user_index - context
                 leaderboard.append("\n...\n")
-            elif i > user_index + context:
-                break
 
             i += 1
 
