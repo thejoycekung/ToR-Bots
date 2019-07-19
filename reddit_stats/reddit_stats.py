@@ -34,7 +34,7 @@ def is_transcription(comment):
         return "www.reddit.com/r/TranscribersOfReddit" in body and "&#32;" in body
     else:
         # For legacy transcriptions.
-        body = comment.body.lower()
+        body = comment.body.casefold()
         return (
             "human" in body
             and "content" in body

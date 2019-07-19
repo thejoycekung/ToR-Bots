@@ -19,21 +19,18 @@ class Handlers(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        formatted_traceback = "\n".join(
+            traceback.format_exception(type(error), error, error.__traceback__)
+        )
         logging.warn(
-            f"{ctx.author.display_name} ran {ctx.prefix}{ctx.invoked_with}"
+            f"{ctx.author.display_name} ran {ctx.prefix}{ctx.invoked_with} "
             f"with message: {ctx.message.content} and had the error: "
-            f"{traceback.format_exception(type(error), error, error.__traceback__)}"
+            f"{formatted_traceback}"
         )
 
-        signature = f"{ctx.prefix}{ctx.invoked_with} {ctx.command.signature}"
         if isinstance(error, commands.ConversionError):
             await ctx.send(
                 f"Oops looks like something couldn't be converted to {error.converter}"
-            )
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(
-                f'Looks like you missed the required argument "{error.param}". '
-                f"Here's the signature of the command to help you out: `{signature}`."
             )
         elif isinstance(error, commands.ArgumentParsingError):
             if isinstance(error, commands.UnexpectedQuoteError):
@@ -51,16 +48,27 @@ class Handlers(commands.Cog):
             elif isinstance(error, commands.ExpectedClosingQuoteError):
                 await ctx.send("Check your quotes! I think you lost one.")
         elif isinstance(error, commands.UserInputError):
+            signature = f"{ctx.prefix}{ctx.invoked_with} {ctx.command.signature}"
+            signature_help = (
+                f"Here's the signature of the command to help you out: `{signature}`."
+            )
             if isinstance(error, commands.BadArgument):
-                return
+                await ctx.send(f"I can't figure out what you mean... {signature_help}")
             elif isinstance(error, commands.BadUnionArgument):
                 await ctx.send(
-                    f"I couldn't turn {error.param} into any of `{error.converters}`."
+                    f"I couldn't turn {error.param} into any of `{error.converters}`. "
+                    f"{signature_help}"
                 )
             elif isinstance(error, commands.TooManyArguments):
                 await ctx.send(
                     "You gave this command too many arguments. "
-                    "It's too full to take all those arguments!"
+                    "It's too full to take all those arguments! "
+                    f"{signature_help}"
+                )
+            elif isinstance(error, commands.MissingRequiredArgument):
+                await ctx.send(
+                    f'Looks like you missed the required argument "{error.param}". '
+                    f"{signature_help}"
                 )
         elif isinstance(error, commands.CheckFailure):
             if isinstance(error, commands.PrivateMessageOnly):
@@ -117,23 +125,26 @@ class Handlers(commands.Cog):
             elif isinstance(error, commands.ExtensionFailed):
                 await ctx.send(
                     f"Well something went wrong in loading the extension {error.name}. "
-                    "Luckily it's not my fault. Unfortunately that means its your's."
+                    "Luckily it's not my fault. Unfortunately that means it's your's."
                 )
         elif isinstance(error, commands.CommandInvokeError):
             maintainer_id = None
             for owner_id in BOT_OWNERS:
-                owner = await self.bot.fetch_user(owner_id)
+                owner = ctx.channel.get_member(owner_id)
+                if owner is None:
+                    continue
+
                 if owner.status == discord.Status.online:
                     maintainer_id = owner_id
                     break
-                elif owner.status == discord.Status.idle and maintainer_id is not None:
+                elif owner.status == discord.Status.idle and maintainer_id is None:
                     maintainer_id = owner_id
 
             contact_message = "Contact a maintainer for help."
             if maintainer_id is not None:
                 contact_message = (
-                    f"It seems like <@{maintainer_id}> is online, "
-                    "and may be able to help you."
+                    f"It seems like <@{maintainer_id}> is online "
+                    "so they may be able to help you."
                 )
 
             await ctx.send(

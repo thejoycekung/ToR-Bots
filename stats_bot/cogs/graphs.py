@@ -59,7 +59,7 @@ class GraphCommands(commands.Cog):
                 await ctx.send(NO_TRANSCRIPTIONS_DURING_TIME)
             else:
                 if single_user is True:
-                    if name == ctx.message.author.display_name:
+                    if name.casefold() == ctx.message.author.display_name.casefold():
                         await ctx.send(NO_HISTORY_AVAILABLE_FOR_YOU)
                     else:
                         await ctx.send(NO_HISTORY_AVAILABLE)
@@ -127,7 +127,7 @@ class GraphCommands(commands.Cog):
 
         rate_plot = await plots.plot_rate(name, start, end)
         if rate_plot is None:
-            if name == ctx.message.author.display_name:
+            if name.casefold() == ctx.message.author.display_name.casefold():
                 await ctx.send(NO_HISTORY_AVAILABLE_FOR_YOU)
             else:
                 await ctx.send(NO_HISTORY_AVAILABLE)

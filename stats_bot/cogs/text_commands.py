@@ -1,81 +1,16 @@
 import html
-import math
 import typing
 
 import discord
 import praw
-from discord.ext import buttons, commands
+from discord.ext import commands
 
 from .. import passwords_and_tokens
 from ..helpers import add_user, database_reader, get_redditor_name
 from ..utils.converters import Redditor
+from ..utils.paginator import ToRPaginator
 
-
-class WherePaginator(buttons.Paginator):
-    async def _paginate(self, ctx: commands.Context):
-        # This is a copy and paste from the buttons.py source code.
-        # The only relevant change is adding the footer.
-        if not self.entries and not self.extra_pages:
-            raise AttributeError(
-                "You must provide at least one entry or page for pagination."
-            )
-
-        if self.entries:
-            self.entries = [self.formatting(entry) for entry in self.entries]
-            entries = list(self.chunker())
-        else:
-            entries = []
-
-        entry_count = len(self.entries)
-        for i, chunk in enumerate(entries):
-            if self.use_embed is False:
-                self._pages.append(self.joiner.join(chunk))
-            else:
-                pages = math.ceil(entry_count / self.length) + len(self.extra_pages)
-                plural = "ies" if entry_count != 1 else "y"
-
-                embed = discord.Embed(
-                    title=self.title,
-                    description=self.joiner.join(chunk),
-                    colour=self.colour,
-                )
-
-                embed.set_footer(
-                    text=f"Page {i+1}/{pages} ({entry_count} entr{plural})"
-                )
-
-                if self.thumbnail:
-                    embed.set_thumbnail(url=self.thumbnail)
-
-                self._pages.append(embed)
-
-        self._pages = self._pages + self.extra_pages
-
-        if isinstance(self._pages[0], discord.Embed):
-            self.page = await ctx.send(embed=self._pages[0])
-        else:
-            self.page = await ctx.send(self._pages[0])
-
-        self._session_task = ctx.bot.loop.create_task(self._session(ctx))
-
-    async def cancel(self, ctx):
-        try:
-            await self.page.clear_reactions()
-        except discord.Forbidden:
-            for button in self._buttons:
-                try:
-                    await self.page.remove_reaction(button, self.ctx.bot)
-                except discord.HTTPException:
-                    pass
-
-        embed = self.page.embed
-        embed.set_footer(text=f"{embed.footer} Session Cancelled.")
-
-        await self.page.edit(embed=embed)
-
-        self._cancelled = True
-        self._session_task.cancel()
-
+no_entries = "No entries were returned for your query."
 
 client_session = None
 
@@ -99,27 +34,27 @@ gamma_ranks = {
 def minutes_to_human_readable(minutes):
     days, hours = divmod(minutes, 60 * 24)
     hours, minutes = divmod(hours, 60)
-    human_readable = []
+    units = []
 
     if days != 0:
         days_string = "days" if days != 1 else "day"
-        human_readable.append(f"{days} {days_string}")
+        units.append(f"{days} {days_string}")
 
     if hours != 0:
         hours_string = "hours" if hours != 1 else "hour"
-        human_readable.append(f"{hours} {hours_string}")
+        units.append(f"{hours} {hours_string}")
 
     if minutes != 0:
         minutes_string = "minutes" if minutes != 1 else "minute"
-        human_readable.append(f"{minutes} {minutes_string}")
+        units.append(f"{minutes} {minutes_string}")
 
-    if len(human_readable) == 3:
-        human_readable[-1] = "and " + human_readable[-1]
-        return ", ".join(human_readable)
-    elif len(human_readable) == 2:
-        return " and ".join(human_readable)
+    if len(units) == 3:
+        days, hours, minutes = units
+        return f"{days}, {hours}, and {minutes}"
+    elif len(units) == 2:
+        return units[0] + " and " + units[1]
     else:
-        return human_readable[0]
+        return units[0]
 
 
 class TextCommands(commands.Cog):
@@ -136,7 +71,7 @@ class TextCommands(commands.Cog):
         stats = await database_reader.fetch_stats(name)
 
         if stats is None or len(stats) != 10:
-            if redditor is None or redditor == user_redditor_name:
+            if redditor is None or redditor.casefold() == user_redditor_name.casefold():
                 await ctx.send("I'm working on adding you!")
                 await add_user(name, ctx.message.author.id)
             else:
@@ -164,7 +99,7 @@ class TextCommands(commands.Cog):
             )
             return
         elif transcription_count is None or transcription_count == 0:
-            if redditor is None or redditor == user_redditor_name:
+            if redditor is None or redditor.casefold() == user_redditor_name.casefold():
                 await ctx.send(
                     "I haven't found any transcriptions for you. "
                     "Have you transcribed anything?"
@@ -187,7 +122,9 @@ class TextCommands(commands.Cog):
             KLJ = "N/A KLJ"
 
         relation = (
-            "your" if redditor is None or redditor == user_redditor_name else "their"
+            "your"
+            if redditor is None or redditor.casefold() == user_redditor_name.casefold()
+            else "their"
         )
         character_average = round(character_count / transcription_count, 2)
         upvote_average = round(upvotes / transcription_count, 2)
@@ -237,8 +174,8 @@ class TextCommands(commands.Cog):
                     continue
                 if (
                     (reply.author.name not in ["transcribot", "transcribersofreddit"])
-                    and ("done" in reply.body.lower())
-                    or ("deno" in reply.body.lower())
+                    and ("done" in reply.body.casefold())
+                    or ("deno" in reply.body.casefold())
                 ):
                     return reply
                 if len(reply.replies):
@@ -246,16 +183,18 @@ class TextCommands(commands.Cog):
 
         def get_done_comment(submission):
             for comment in submission.comments:
-                if not comment.author:
+                if comment.author is None:
                     continue
-                if comment.author.name == "transcribot":
+                elif comment.author.name.casefold() == "transcribot":
                     continue
-                if comment.author.name == "transcribersofreddit":
-                    c = get_nested_done_comment(comment)
-                    if c:
-                        return c
+                elif comment.author.name.casefold() == "transcribersofreddit":
+                    comment = get_nested_done_comment(comment)
+                    if comment is not None:
+                        return comment
                     continue
-                if ("done" in comment.body.lower()) or ("deno" in comment.body.lower()):
+                if ("done" in comment.body.casefold()) or (
+                    "deno" in comment.body.casefold()
+                ):
                     return comment
             return None
 
@@ -330,16 +269,19 @@ class TextCommands(commands.Cog):
     async def server_info(self, ctx):
         await ctx.send("This is a good server with good persons")
 
-    @commands.command()
-    async def gammas(self, ctx, context=3):
+    @commands.command(aliases=["leaderboard", "lb"])
+    async def gammas(self, ctx, redditor: Redditor = None, context=3):
         if context > 10:
             await ctx.send(
                 "To prevent spam you can't get context larger than 10 users."
             )
             return
 
+        username = get_redditor_name(
+            redditor if redditor is not None else ctx.message.author.display_name
+        )
         leaderboard = []
-        redditor = get_redditor_name(ctx.message.author.display_name)
+        top_leaderboard_size = 5
 
         all_gammas = await database_reader.gammas()
 
@@ -347,58 +289,37 @@ class TextCommands(commands.Cog):
         sorted_gammas = sorted(
             all_gammas, key=lambda item: item["official_gamma_count"], reverse=True
         )
-        sorted_names = [item["name"].casefold() for item in sorted_gammas]
 
         all_gamma_count = sum(item["official_gamma_count"] for item in all_gammas)
 
-        user_exists = redditor.casefold() in sorted_names
-        user_index = None
-        user_in_leaderboard = False
+        user_index = next(
+            i
+            for i, item in enumerate(sorted_gammas)
+            if item["name"].casefold() == redditor.casefold()
+        )
 
-        top_leaderboard_size = 5
+        i = 0
+        while i < len(all_gammas):
+            name, official_gamma = sorted_gammas[i]
 
-        if user_exists is True:
-            user_index = sorted_names.index(redditor.casefold())
-            user_in_leaderboard = user_index <= top_leaderboard_size
-
-        if user_in_leaderboard is True:
-            # Pad the main leaderboard size if the user is in it.
-            top_leaderboard_size += top_leaderboard_size - user_index
-
-        max_size = len(all_gammas)
-        top_leaderboard_size = min(top_leaderboard_size, max_size)
-
-        for i, (name, official_gamma) in enumerate(
-            sorted_gammas[:top_leaderboard_size]
-        ):
             escaped_name = discord.utils.escape_markdown(name)
             user_row = f"{i + 1}. {escaped_name}: {official_gamma}"
 
-            if name == redditor:
+            if name.casefold() == username.casefold():
                 user_row = f"**{user_row}**"
 
             leaderboard.append(user_row)
 
-        if user_exists is True and user_in_leaderboard is False:
-            offset = user_index - top_leaderboard_size
-            if offset > context:
+            # Jump to user component.
+            if i > top_leaderboard_size and user_index + context > top_leaderboard_size:
+                i = user_index - context
                 leaderboard.append("\n...\n")
+            elif i > user_index + context:
+                break
 
-            # Clamp between the max leaderboard size and the max total size.
-            start_index = min(max(user_index - context, top_leaderboard_size), max_size)
-            end_index = min(user_index + context, max_size)
-            for i, (name, official_gamma) in enumerate(
-                sorted_gammas[start_index:end_index]
-            ):
-                escaped_name = discord.utils.escape_markdown(name)
-                user_row = f"{start_index + i + 1}. {escaped_name}: {official_gamma}"
+            i += 1
 
-                if name == redditor:
-                    user_row = f"**{user_row}**"
-
-                leaderboard.append(user_row)
-
-        leaderboard.append(f"\nSum of all transcriptions: {all_gamma_count} Γ")
+        leaderboard.append(f"\nSum of all transcriptions: {all_gamma_count}Γ")
 
         await ctx.send(
             embed=discord.Embed(title="Gammas", description="\n".join(leaderboard))
@@ -436,7 +357,11 @@ class TextCommands(commands.Cog):
 
         comments_context = find_entries(comments, looking_for)
 
-        paginator = WherePaginator(
+        if len(comments_context) == 0:
+            await ctx.send(no_entries)
+            return
+
+        paginator = ToRPaginator(
             title=f"Where `{looking_for}`",
             embed=True,
             entries=comments_context,
@@ -451,7 +376,11 @@ class TextCommands(commands.Cog):
 
         comments_context = find_entries(comments, looking_for)
 
-        paginator = WherePaginator(
+        if len(comments_context) == 0:
+            await ctx.send(no_entries)
+            return
+
+        paginator = ToRPaginator(
             title=f"All where `{looking_for}`",
             embed=True,
             entries=comments_context,
@@ -509,8 +438,7 @@ class TextCommands(commands.Cog):
                 f"`{blank_progress_bar}` - You know exactly how many you've done, "
                 "you slacker."
             )
-
-        if hours != 24:
+        elif hours != 24:
             progress = (
                 f"You've done {transcription_count} transcriptions "
                 f"in the last {hours} hours!"
@@ -629,7 +557,7 @@ def find_entries(results, looking_for, offset=25):
     for i, (comment_id, content, permalink) in enumerate(results):
         content = content.casefold()
 
-        index = content.find(looking_for.lower())
+        index = content.find(looking_for.casefold())
         start = index - offset
         end = index + len(looking_for) + offset
 
