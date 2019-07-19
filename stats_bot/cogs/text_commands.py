@@ -302,7 +302,9 @@ class TextCommands(commands.Cog):
         )
 
         i = 0
-        while i < len(all_gammas):
+        while i < top_leaderboard_size or (
+            user_index is not None and i < user_index + context
+        ):
             name, official_gamma = sorted_gammas[i]
 
             escaped_name = discord.utils.escape_markdown(name)
@@ -314,16 +316,13 @@ class TextCommands(commands.Cog):
             leaderboard.append(user_row)
 
             # Jump to user component.
-            if i > top_leaderboard_size:
-                if user_index is None:
-                    break
-
-                if user_index >= top_leaderboard_size or user_index + context > i:
-                    i = user_index - context
-                    leaderboard.append("\n...\n")
-
-            if user_index is not None and i > user_index + context:
-                break
+            if (
+                i == top_leaderboard_size
+                and user_index is not None
+                and user_index - context > top_leaderboard_size
+            ):
+                i = user_index - context
+                leaderboard.append("\n...\n")
 
             i += 1
 
