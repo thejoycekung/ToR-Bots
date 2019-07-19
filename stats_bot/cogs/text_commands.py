@@ -295,7 +295,7 @@ class TextCommands(commands.Cog):
         user_index = next(
             i
             for i, item in enumerate(sorted_gammas)
-            if item["name"].casefold() == redditor.casefold()
+            if item["name"].casefold() == username.casefold()
         )
 
         i = 0
