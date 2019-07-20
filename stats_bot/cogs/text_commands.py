@@ -420,6 +420,8 @@ class TextCommands(commands.Cog):
         overflowed_progress = "[##########]####"
         moly_overflowed_progress = "[##########]#####"
         stop_overflowed_progress = "[##########]######"
+        help_overflowed_progress = "[##########]######"
+        witty_overflowed_progress = "[##########]#######"
 
         if hours == 0:
             await ctx.send(
@@ -474,12 +476,20 @@ class TextCommands(commands.Cog):
                 f"{transcription_count} transcriptions in 24 hours :O! "
                 "That's a ton of transcriptions in 24 hours."
             )
-        elif transcription_count > 300:
+        elif 300 < transcription_count > 400:
             progress = (
                 f"`{stop_overflowed_progress}` - please stop, you've done "
                 f"{transcription_count} transcriptions in 24 hours. "
                 "That's too many transcriptions in 24 hours."
             )
+        elif 400 < transcription_count < 500:
+            progress = f"`{help_overflowed_progress}` - I think you need help, "
+            f"you've done {transcription_count} transcriptions in 24 hours, "
+            "that's just... so many transcriptions!"
+        elif transcription_count > 500:
+            progress = f"`{witty_overflowed_progress}` - I'm running out of witty "
+            "things to convey that this is really impressive and really concerning... "
+            f"Seriously you've done {transcription_count} transcriptions in 24 hours."
 
         await ctx.send(progress)
 
