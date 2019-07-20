@@ -66,18 +66,18 @@ class TextCommands(commands.Cog):
 
     @commands.command(aliases=["torstats", "transcriptions", "stats"])
     async def tor_stats(self, ctx, redditor: Redditor = None):
-        user_redditor_name = get_redditor_name(ctx.message.author.display_name)
-        name = user_redditor_name if redditor is None else redditor.name
+        author = get_redditor_name(ctx.message.author.display_name)
+        username = author if redditor is None else redditor.name
 
-        stats = await database_reader.fetch_stats(name)
+        stats = await database_reader.fetch_stats(username)
 
         if stats is None or len(stats) != 10:
-            if redditor is None or redditor.casefold() == user_redditor_name.casefold():
+            if redditor is None or username.casefold() == author.casefold():
                 await ctx.send("I'm working on adding you!")
-                await add_user(name, ctx.message.author.id)
+                await add_user(username, ctx.message.author.id)
             else:
                 await ctx.send("I don't know that user, sorry!")
-                await add_user(name, None)
+                await add_user(username, None)
 
             return
 
@@ -100,7 +100,7 @@ class TextCommands(commands.Cog):
             )
             return
         elif transcription_count is None or transcription_count == 0:
-            if redditor is None or redditor.casefold() == user_redditor_name.casefold():
+            if redditor is None or username.casefold() == author.casefold():
                 await ctx.send(
                     "I haven't found any transcriptions for you. "
                     "Have you transcribed anything?"
@@ -124,7 +124,7 @@ class TextCommands(commands.Cog):
 
         relation = (
             "your"
-            if redditor is None or redditor.casefold() == user_redditor_name.casefold()
+            if redditor is None or username.casefold() == author.casefold()
             else "their"
         )
         character_average = round(character_count / transcription_count, 2)
@@ -147,7 +147,7 @@ class TextCommands(commands.Cog):
             f"**Bad Human**: {bad_human} (*{bad_human_average} per transc.*)"
         )
 
-        embed = discord.Embed(title=f"Stats for /u/{name}", description=stats)
+        embed = discord.Embed(title=f"Stats for /u/{username}", description=stats)
         await ctx.send(embed=embed)
 
     async def find(self, source):

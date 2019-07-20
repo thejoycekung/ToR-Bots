@@ -137,7 +137,7 @@ class Handlers(commands.Cog):
             elif isinstance(error, commands.CommandInvokeError):
                 maintainer_id = None
                 for owner_id in BOT_OWNERS:
-                    owner = ctx.channel.get_member(owner_id)
+                    owner = ctx.guild.get_member(owner_id)
                     if owner is None:
                         continue
 
