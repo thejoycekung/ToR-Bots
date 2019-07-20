@@ -43,23 +43,22 @@ class GraphCommands(commands.Cog):
     ):
         single_user = redditors is None or len(redditors) < 2
         if single_user is True:
-            name = (
-                ctx.message.author.display_name
-                if redditors is None
-                else redditors[0].name
+            author = get_redditor_name(ctx.message.author.display_name)
+            username = (
+                author if redditors is None else get_redditor_name(redditors[0].name)
             )
-            name = get_redditor_name(name)
-            history_plot = await plots.plot_history(name, start, end, False)
+
+            history_plot = await plots.plot_history(username, start, end, False)
         else:
-            names = [redditor.name for redditor in redditors]
-            history_plot = await plots.plot_multi_history(names, start, end)
+            usernames = [get_redditor_name(redditor.name) for redditor in redditors]
+            history_plot = await plots.plot_multi_history(usernames, start, end)
 
         if history_plot is None:
             if start is not None or end is not None:
                 await ctx.send(NO_TRANSCRIPTIONS_DURING_TIME)
             else:
                 if single_user is True:
-                    if name.casefold() == ctx.message.author.display_name.casefold():
+                    if username.casefold() == author.casefold():
                         await ctx.send(NO_HISTORY_AVAILABLE_FOR_YOU)
                     else:
                         await ctx.send(NO_HISTORY_AVAILABLE)
@@ -122,12 +121,13 @@ class GraphCommands(commands.Cog):
         start: typing.Optional[Date] = None,
         end: typing.Optional[Date] = None,
     ):
-        name = ctx.message.author.display_name if redditor is None else redditor.name
-        name = get_redditor_name(name)
+        author = get_redditor_name(ctx.message.author.display_name)
+        username = author if redditor is None else redditor.name
+        username = get_redditor_name(username)
 
-        rate_plot = await plots.plot_rate(name, start, end)
+        rate_plot = await plots.plot_rate(username, start, end)
         if rate_plot is None:
-            if name.casefold() == ctx.message.author.display_name.casefold():
+            if username.casefold() == author.casefold():
                 await ctx.send(NO_HISTORY_AVAILABLE_FOR_YOU)
             else:
                 await ctx.send(NO_HISTORY_AVAILABLE)
