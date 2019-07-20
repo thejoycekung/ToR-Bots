@@ -483,9 +483,11 @@ class TextCommands(commands.Cog):
                 "That's too many transcriptions in 24 hours."
             )
         elif 400 < transcription_count < 500:
-            progress = f"`{help_overflowed_progress}` - I think you need help, "
-            f"you've done {transcription_count} transcriptions in 24 hours, "
-            "that's just... so many transcriptions!"
+            progress = (
+                f"`{help_overflowed_progress}` - I think you need help, "
+                f"you've done {transcription_count} transcriptions in 24 hours, "
+                "that's just... so many transcriptions!"
+            )
         else:
             progress = f"`{witty_overflowed_progress}` - I'm running out of witty "
             "things to convey that this is really impressive and really concerning... "
