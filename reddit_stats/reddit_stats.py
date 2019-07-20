@@ -55,7 +55,19 @@ async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
 
     async with database.get_connection() as connection:
         transcribers = await connection.fetch(
-            "SELECT name FROM transcribers ORDER BY name ASC;"
+            """
+            SELECT
+                COALESCE(transcriber, name)
+                FROM (
+                    SELECT transcriber
+                    FROM gammas
+                    WHERE time > NOW() - interval '24 hours'
+                    GROUP BY transcriber
+                    ORDER BY SUM(new_gamma - old_gamma) DESC
+                ) top_gammas
+                RIGHT OUTER JOIN transcribers ON name = transcriber
+                ORDER BY transcriber;
+            """
         )
 
     for transcriber in transcribers:
@@ -95,8 +107,16 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         logging.info(f"Getting stats for /u/{user}")
 
         transcriber = await connection.fetchrow(
-            "SELECT start_comment, end_comment, reference_comment, forwards, valid "
-            "FROM transcribers WHERE name = $1",
+            """SELECT (
+                    start_comment,
+                    end_comment,
+                    reference_comment,
+                    forwards,
+                    valid
+                )
+                FROM transcribers
+                WHERE name = $1
+            """,
             user,
         )
 
@@ -129,7 +149,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         elif prioritize_new is True and forwards is True:
             forwards = True
 
-        if start_comment is None:
+        if start_comment is None or end_comment is None:
             await connection.execute(
                 "UPDATE transcribers SET start_comment = $1, end_comment = $1, "
                 "forwards = FALSE WHERE name = $2",
@@ -195,7 +215,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             return
 
         reddit_comments = [reddit.comment(comment.id) for comment in comments]
-        comment_count = len(reddit_comments)
+        comment_count = len(comments)
 
         end_reached = f"Reached the end of /u/{user}'s comments."
         newest_reached = f"Reached /u/{user}'s newest comment."
