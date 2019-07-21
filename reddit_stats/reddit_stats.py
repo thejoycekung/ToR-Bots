@@ -57,7 +57,7 @@ async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
         transcribers = await connection.fetch(
             """
             SELECT
-                COALESCE(transcriber, name) AS name,
+                COALESCE(transcriber, name) AS name
                 FROM (
                     SELECT transcriber
                     FROM gammas
