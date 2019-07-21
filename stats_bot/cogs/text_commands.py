@@ -476,7 +476,7 @@ class TextCommands(commands.Cog):
                 f"{transcription_count} transcriptions in 24 hours :O! "
                 "That's a ton of transcriptions in 24 hours."
             )
-        elif 300 < transcription_count > 400:
+        elif 300 < transcription_count < 400:
             progress = (
                 f"`{stop_overflowed_progress}` - please stop, you've done "
                 f"{transcription_count} transcriptions in 24 hours. "
