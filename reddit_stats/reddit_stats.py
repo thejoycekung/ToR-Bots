@@ -107,13 +107,12 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         logging.info(f"Getting stats for /u/{user}")
 
         transcriber = await connection.fetchrow(
-            """SELECT (
+            """SELECT
                     start_comment,
                     end_comment,
                     reference_comment,
                     forwards,
                     valid
-                )
                 FROM transcribers
                 WHERE name = $1
             """,
