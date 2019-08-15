@@ -160,7 +160,7 @@ class Handlers(commands.Cog):
                         f"{contact_message}"
                     )
                 )
-                logging.info(f"Message: {error.message}")
+                logging.info(f"Message: {error.original}")
             elif isinstance(error, commands.CommandOnCooldown):
                 await ctx.send(
                     "You can't use this command for another "

@@ -277,8 +277,10 @@ class TextCommands(commands.Cog):
             )
             return
 
-        username = get_redditor_name(
-            redditor if redditor is not None else ctx.message.author.display_name
+        username = (
+            redditor.name
+            if redditor is not None
+            else get_redditor_name(ctx.message.author.display_name)
         )
         leaderboard = []
         top_leaderboard_size = 5
