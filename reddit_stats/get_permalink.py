@@ -17,7 +17,12 @@ async def main():
 
     async with database.get_connection() as connection:
         rows = await connection.fetch(
-            "SELECT comment_id FROM transcriptions WHERE permalink IS NULL"
+            """
+            SELECT
+                comment_id
+            FROM transcriptions
+            WHERE permalink IS NULL;
+            """
         )
 
         if rows is None:
@@ -37,7 +42,11 @@ async def main():
                 continue
 
             await connection.execute(
-                "UPDATE transcriptions SET permalink = $1 WHERE comment_id = $2",
+                """
+                UPDATE transcriptions
+                    SET permalink = $1
+                WHERE comment_id = $2
+                """,
                 permalink,
                 comment_id,
             )

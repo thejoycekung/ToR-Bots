@@ -33,9 +33,18 @@ async def analyze_transcription(transcription, refresh_retries=3):
 
         async with database.get_connection() as connection:
             await connection.execute(
-                "UPDATE transcriptions SET good_bot = 0, bad_bot = 0, "
-                "good_human = 0, bad_human = 0, comment_count = 0, upvotes = 0, "
-                "last_checked = NOW(), error = true WHERE comment_id = $1",
+                """
+                UPDATE transcriptions
+                    SET good_bot = 0,
+                    bad_bot = 0,
+                    good_human = 0,
+                    bad_human = 0,
+                    comment_count = 0,
+                    upvotes = 0,
+                    last_checked = NOW(),
+                    error = true
+                WHERE comment_id = $1;
+                """,
                 transcription.id,
             )
             return
@@ -72,9 +81,18 @@ async def analyze_transcription(transcription, refresh_retries=3):
 
     async with database.get_connection() as connection:
         await connection.execute(
-            "UPDATE transcriptions SET good_bot = $1, bad_bot = $2, good_human = $3, "
-            "bad_human = $4, comment_count = $5, upvotes = $6, last_checked = NOW(), "
-            "error = false WHERE comment_id = $7",
+            """
+            UPDATE transcriptions
+                SET good_bot = $1,
+                bad_bot = $2,
+                good_human = $3,
+                bad_human = $4,
+                comment_count = $5,
+                upvotes = $6,
+                last_checked = NOW(),
+                error = FALSE
+            WHERE comment_id = $7;
+            """,
             good_bot,
             bad_bot,
             good_human,
@@ -88,10 +106,14 @@ async def analyze_transcription(transcription, refresh_retries=3):
 async def analyze_all_transcriptions():
     async with database.get_connection() as connection:
         transcriptions = await connection.fetch(
-            "SELECT comment_id FROM transcriptions WHERE "
-            "EXTRACT(epoch FROM NOW()) - EXTRACT(epoch FROM found) < (24 * 60 * 60) OR "
-            "last_checked IS NULL OR good_bot IS NULL OR bad_bot IS NULL OR "
-            "good_human IS NULL OR bad_human IS NULL ORDER BY last_checked ASC"
+            """
+            SELECT comment_id
+            FROM transcriptions
+            WHERE EXTRACT(epoch FROM NOW()) - EXTRACT(epoch FROM found) < (24 * 60 * 60)
+                OR last_checked IS NULL OR good_bot IS NULL OR bad_bot IS NULL
+                OR good_human IS NULL OR bad_human IS NULL
+            ORDER BY last_checked ASC;
+            """
         )
 
     if transcriptions is None:

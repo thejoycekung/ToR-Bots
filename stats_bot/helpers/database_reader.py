@@ -32,7 +32,13 @@ async def close_pool():
 async def get_flair_count(reddit_name, discord_id):
     async with get_connection() as connection:
         row = await connection.fetchrow(
-            "SELECT valid, official_gamma_count FROM transcribers WHERE name = $1",
+            """
+            SELECT
+                valid,
+                official_gamma_count
+            FROM transcribers
+            WHERE name = $1;
+            """,
             reddit_name,
         )
 
@@ -49,8 +55,14 @@ async def get_flair_count(reddit_name, discord_id):
 async def get_last_x_hours(reddit_name, hours=24):
     async with get_connection() as connection:
         gamma_records = await connection.fetch(
-            "SELECT old_gamma, new_gamma FROM gammas WHERE transcriber = $1 "
-            "AND time >= NOW() - $2::INTERVAL ORDER BY time DESC",
+            """"
+            SELECT
+                old_gamma,
+                new_gamma
+            FROM gammas
+            WHERE transcriber = $1 AND time >= NOW() - $2::INTERVAL
+            ORDER BY time DESC;
+            """,
             reddit_name,
             datetime.timedelta(hours=hours),
         )
@@ -64,7 +76,11 @@ async def get_last_x_hours(reddit_name, hours=24):
 async def get_total_gammas():
     async with get_connection() as connection:
         gamma_count = await connection.fetchval(
-            "SELECT SUM(official_gamma_count) AS gamma_count FROM transcribers"
+            """
+            SELECT
+                SUM(official_gamma_count) AS gamma_count
+            FROM transcribers;
+            """
         )
 
     return gamma_count
@@ -74,8 +90,13 @@ async def gammas():
     async with get_connection() as connection:
         gammas = await connection.fetch(
             (
-                "SELECT name, official_gamma_count FROM transcribers "
-                "WHERE NOT official_gamma_count IS NULL"
+                """
+                SELECT
+                    name,
+                    official_gamma_count
+                FROM transcribers
+                WHERE NOT official_gamma_count IS NULL;
+                """
             )
         )
 
@@ -85,7 +106,12 @@ async def gammas():
 async def fetch_official_gamma_count(user):
     async with get_connection() as connection:
         gamma_count = await connection.fetchval(
-            "SELECT official_gamma_count FROM transcribers WHERE name = $1", user
+            """
+            SELECT official_gamma_count
+            FROM transcribers
+            WHERE name = $1;
+            """,
+            user,
         )
 
     return gamma_count
@@ -99,16 +125,23 @@ async def fetch_stats(name):
     async with get_connection() as connection:
         stats = await connection.fetchrow(
             (
-                "SELECT counted_comments, official_gamma_count, "
-                "COUNT(comment_id) as comment_count, "
-                "SUM(LENGTH(content)) as total_length, "
-                "COALESCE(SUM(upvotes), 0) as upvotes, "
-                "COALESCE(SUM(good_bot), 0) as good_bot, "
-                "COALESCE(SUM(bad_bot), 0) as bad_bot, "
-                "COALESCE(SUM(good_human), 0) as good_human, "
-                "COALESCE(SUM(bad_human), 0) as bad_human, "
-                "valid FROM transcribers LEFT OUTER JOIN transcriptions ON name = "
-                "transcriber WHERE name = $1 GROUP BY name"
+                """
+                SELECT
+                    counted_comments,
+                    official_gamma_count,
+                    COUNT(comment_id) as comment_count,
+                    SUM(LENGTH(content)) as total_length,
+                    COALESCE(SUM(upvotes), 0) as upvotes,
+                    SUM(good_bot) as good_bot,
+                    SUM(bad_bot) as bad_bot,
+                    SUM(good_human) as good_human,
+                    SUM(bad_human) as bad_human,
+                    valid
+                FROM transcribers
+                LEFT OUTER JOIN transcriptions ON name = transcriber
+                WHERE name = $1
+                GROUP BY name;
+                """
             ),
             name,
         )
@@ -119,7 +152,12 @@ async def fetch_stats(name):
 async def info():
     async with get_connection() as connection:
         row = await connection.fetchrow(
-            "SELECT most_recent, least_recent, difference, running FROM info;"
+            """SELECT
+                most_recent,
+                least_recent,
+                difference,
+                running
+            FROM info;"""
         )
 
     return row
@@ -128,13 +166,17 @@ async def info():
 async def fetch_all_stats():
     async with get_connection() as connection:
         all_stats = await connection.fetchrow(
-            "SELECT COUNT(comment_id) AS comment_count, "
-            "SUM(LENGTH(content)) AS total_length, "
-            "SUM(upvotes) AS upvotes, "
-            "SUM(good_bot) AS good_bot, "
-            "SUM(bad_bot) AS bad_bot, "
-            "SUM(good_human) AS good_human, "
-            "SUM(bad_human) AS bad_human FROM transcriptions;"
+            """
+            SELECT
+                COUNT(comment_id) AS comment_count,
+                SUM(LENGTH(content)) AS total_length,
+                SUM(upvotes) AS upvotes,
+                SUM(good_bot) AS good_bot,
+                SUM(bad_bot) AS bad_bot,
+                SUM(good_human) AS good_human,
+                SUM(bad_human) AS bad_human
+            FROM transcriptions;
+            """
         )
 
     return all_stats
@@ -144,10 +186,16 @@ async def get_new_flairs(last_time):
     async with get_connection() as connection:
         flairs = await connection.fetch(
             (
-                "SELECT transcribers.name, gammas.old_gamma, gammas.new_gamma, "
-                "transcribers.discord_id FROM new_gammas "
-                "INNER JOIN transcribers ON name = transcriber "
-                "WHERE EXTRACT(epoch from time) > $1 ORDER BY TIME"
+                """
+                SELECT
+                    transcribers.name,
+                    gammas.old_gamma,
+                    gammas.new_gamma,
+                    transcribers.discord_id
+                FROM new_gammas
+                INNER JOIN transcribers ON name = transcriber
+                WHERE EXTRACT(epoch from time) > $1 ORDER BY TIME;
+                """
             ),
             last_time,
         )
@@ -158,8 +206,11 @@ async def get_new_flairs(last_time):
 async def add_user(user, discord_id):
     async with get_connection() as connection:
         await connection.execute(
-            "INSERT INTO transcribers (name, discord_id) VALUES ($1, $2) "
-            "ON CONFLICT DO NOTHING",
+            """
+            INSERT INTO transcribers (name, discord_id)
+                VALUES ($1, $2)
+            ON CONFLICT DO NOTHING;
+            """,
             user,
             discord_id,
         )
@@ -168,7 +219,12 @@ async def add_user(user, discord_id):
 async def get_transcriptions(name):
     async with get_connection() as connection:
         comment_ids = await connection.fetchval(
-            "SELECT comment_id FROM transcriptions WHERE transcriber = $1", name
+            """
+            SELECT comment_id
+            FROM transcriptions
+            WHERE transcriber = $1;
+            """,
+            name,
         )
 
     return comment_ids
@@ -178,15 +234,27 @@ async def find_comments(text, name=None):
     async with get_connection() as connection:
         if name is not None:
             comments = await connection.fetch(
-                "SELECT comment_id, content, permalink FROM transcriptions "
-                "WHERE transcriber = $1 AND content LIKE '%' || $2 || '%'",
+                """
+                SELECT
+                    comment_id,
+                    content,
+                    permalink
+                FROM transcriptions
+                WHERE transcriber = $1 AND content LIKE '%' || $2 || '%';
+                """,
                 name,
                 text,
             )
         else:
             comments = await connection.fetch(
-                "SELECT comment_id, content, permalink FROM transcriptions "
-                "WHERE content LIKE '%' || $1 || '%'",
+                """
+                SELECT
+                    comment_id,
+                    content,
+                    permalink
+                FROM transcriptions
+                WHERE content LIKE '%' || $1 || '%';
+                """,
                 text,
             )
 
