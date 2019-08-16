@@ -15,21 +15,31 @@ psql -U postgres -d torstats --command "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN
 psql -U postgres --command "CREATE USER \"${user_name}\" WITH PASSWORD '${user_password}' IN GROUP torstats_admin"
 
 psql -U postgres -d torstats --command "CREATE TABLE IF NOT EXISTS transcribers (
-    name citext PRIMARY KEY,
+    name citext
+        PRIMARY KEY,
     discord_id bigint,
     official_gamma_count integer,
     start_comment text,
     end_comment text,
     reference_comment text,
-    valid boolean DEFAULT TRUE NOT NULL,
-    counted_comments integer DEFAULT '0'::integer NOT NULL,
-    forwards boolean DEFAULT FALSE NOT NULL
+    valid boolean
+        NOT NULL
+        DEFAULT TRUE,
+    counted_comments integer
+        NOT NULL
+        DEFAULT 0,
+    forwards boolean
+        NOT NULL
+        DEFAULT FALSE
 );"
 
 psql -U postgres -d torstats --command "CREATE TABLE IF NOT EXISTS new_gammas (
-    transcriber citext REFERENCES transcribers(name),
-    gamma integer,
-    \"time\" timestamp with time zone,
+    transcriber citext
+        REFERENCES transcribers(name),
+    gamma integer
+        NOT NULL,
+    \"time\" timestamp with time zone
+        NOT NULL,
     PRIMARY KEY (transcriber, gamma)
 );"
 
@@ -73,18 +83,38 @@ psql -U postgres -d torstats --command "CREATE VIEW gammas AS (
 psql -U postgres -d torstats --command "CREATE TABLE IF NOT EXISTS transcriptions (
     comment_id text PRIMARY KEY,
     transcriber citext REFERENCES transcribers(name),
-    content text NOT NULL,
-    subreddit text NOT NULL,
-    found timestamp with time zone,
-    comment_count integer DEFAULT 0,
-    upvotes integer DEFAULT 0,
+    content text
+        NOT NULL,
+    subreddit text
+        NOT NULL,
+    found timestamp with time zone
+        NOT NULL,
+    comment_count integer
+        NOT NULL
+        DEFAULT 0,
+    upvotes integer
+        NOT NULL
+        DEFAULT 0,
     last_checked timestamp with time zone,
-    good_bot integer DEFAULT 0,
-    bad_bot integer DEFAULT 0,
-    good_human integer DEFAULT 0,
-    bad_human integer DEFAULT 0,
-    error boolean DEFAULT FALSE,
-    from_archive boolean DEFAULT FALSE,
-    permalink text NOT NULL,
+    good_bot integer
+        NOT NULL
+        DEFAULT 0,
+    bad_bot integer
+        NOT NULL
+        DEFAULT 0,
+    good_human integer
+        NOT NULL
+        DEFAULT 0,
+    bad_human integer
+        NOT NULL
+        DEFAULT 0,
+    error boolean
+        NOT NULL
+        DEFAULT FALSE,
+    from_archive boolean
+        NOT NULL
+        DEFAULT FALSE,
+    permalink text
+        NOT NULL,
     created timestamp with time zone
 );"

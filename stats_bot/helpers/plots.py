@@ -38,9 +38,13 @@ async def plot_all_history(
 
     async with database_reader.get_connection() as connection:
         rows = await connection.fetch(
-            "SELECT DATE(time) AS day, SUM(gamma) "
-            "FROM new_gammas WHERE time BETWEEN $1 AND $2 "
-            "GROUP BY DATE(time) ORDER BY DATE(time) ASC;",
+            """
+            SELECT
+                DATE(time) AS day,
+                SUM(gamma) AS gamma_count
+            FROM new_gammas WHERE time BETWEEN $1 AND $2
+            GROUP BY DATE(time) ORDER BY DATE(time) ASC;
+            """,
             start,
             end,
         )
@@ -53,7 +57,7 @@ async def plot_all_history(
 
     for row in rows:
         days.append(row["day"])
-        gamma_counts.append(row["gamma"])
+        gamma_counts.append(row["gamma_count"])
 
     plot.plot(days, gamma_counts, color="black")
 
@@ -109,9 +113,14 @@ async def plot_multi_history(
 
         async with database_reader.get_connection() as connection:
             rows = await connection.fetch(
-                "SELECT DATE(time) AS date, SUM(new_gamma - old_gamma) AS gamma_count "
-                "FROM gammas WHERE transcriber = $1 AND time BETWEEN $2 AND $3 "
-                "GROUP BY DATE(TIME) ORDER BY DATE(time) ASC",
+                """
+                SELECT
+                    DATE(time) AS date,
+                    SUM(new_gamma - old_gamma) AS gamma_count
+                FROM gammas WHERE transcriber = $1 AND time BETWEEN $2 AND $3
+                GROUP BY DATE(TIME)
+                ORDER BY DATE(time) ASC;
+                """,
                 name,
                 start,
                 end,
@@ -174,8 +183,12 @@ async def plot_distribution():
     async with database_reader.get_connection() as connection:
         rows = await connection.fetch(
             (
-                "SELECT official_gamma_count FROM transcribers "
-                "WHERE official_gamma_count IS NOT NULL AND official_gamma_count > 0"
+                """
+                SELECT
+                    official_gamma_count
+                FROM transcribers
+                WHERE official_gamma_count IS NOT NULL AND official_gamma_count > 0;
+                """
             )
         )
 
@@ -244,9 +257,14 @@ async def plot_rate(
 
     async with database_reader.get_connection() as connection:
         rows = await connection.fetch(
-            "SELECT DATE(time) AS date, SUM(new_gamma - old_gamma) AS gamma_count "
-            "FROM gammas WHERE transcriber = $1 AND time BETWEEN $2 AND $3 "
-            "GROUP BY DATE(TIME) ORDER BY DATE(time) ASC",
+            """
+            SELECT
+                DATE(time) AS date,
+                SUM(new_gamma - old_gamma) AS gamma_count
+            FROM gammas
+            WHERE transcriber = $1 AND time BETWEEN $2 AND $3
+            GROUP BY DATE(TIME) ORDER BY DATE(time) ASC;
+            """,
             name,
             start,
             end,
@@ -282,8 +300,14 @@ async def plot_rate(
 async def plot_all_rate():
     async with database_reader.get_connection() as connection:
         rows = await connection.fetch(
-            "SELECT DATE(time) AS date, SUM(new_gamma - old_gamma) as gamma_count "
-            "FROM gammas GROUP BY DATE(time) ORDER BY DATE(time) ASC;"
+            """
+            SELECT
+                DATE(time) AS date,
+                SUM(new_gamma - old_gamma) AS gamma_count
+            FROM gammas
+            WHERE old_gamma IS NOT NULL
+            GROUP BY DATE(time) ORDER BY DATE(time) ASC;
+            """
         )
 
     if rows is None or len(rows) < 2:
@@ -354,9 +378,14 @@ async def plot_history(
 
     async with database_reader.get_connection() as connection:
         rows = await connection.fetch(
-            "SELECT DATE(time) AS date, SUM(new_gamma - old_gamma) AS gamma_count "
-            "FROM gammas WHERE transcriber = $1 AND time BETWEEN $2 AND $3 "
-            "GROUP BY DATE(TIME) ORDER BY DATE(time) ASC",
+            """
+            SELECT
+                DATE(time) AS date,
+                SUM(new_gamma - old_gamma) AS gamma_count
+            FROM gammas
+            WHERE transcriber = $1 AND time BETWEEN $2 AND $3
+            GROUP BY DATE(TIME) ORDER BY DATE(time) ASC;
+            """,
             name,
             start,
             end,
