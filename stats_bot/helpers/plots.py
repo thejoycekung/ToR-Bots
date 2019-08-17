@@ -3,14 +3,16 @@ import io
 import typing
 
 import matplotlib
-import matplotlib.pyplot as plot
 import matplotlib.ticker
 
 import praw
 
 from . import database_reader
 
+# Headless mode. Must come before importing pyplot.
 matplotlib.use("AGG")
+
+import matplotlib.pyplot as plot  # noqa: E402
 
 
 async def plot_all_history(
