@@ -492,9 +492,10 @@ class TextCommands(commands.Cog):
             )
         else:
             progress = (
-                f"`{witty_overflowed_progress}` - I'm running out of witty "
-                "things to convey that this is really impressive and really concerning... "
-                f"Seriously you've done {transcription_count} transcriptions in 24 hours."
+                f"`{witty_overflowed_progress}` - I'm running out of witty things to "
+                "convey that this is really impressive *and* really concerning... "
+                f"Seriously you've done {transcription_count} transcriptions "
+                "in 24 hours. That's waaay too many transcriptions."
             )
 
         await ctx.send(progress)
