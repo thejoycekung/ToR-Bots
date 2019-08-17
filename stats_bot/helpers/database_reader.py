@@ -138,7 +138,7 @@ async def fetch_stats(name):
                     SUM(bad_human) as bad_human,
                     valid
                 FROM transcribers
-                LEFT OUTER JOIN transcriptions ON name = transcriber
+                LEFT OUTER JOIN transcription_stats ON name = transcriber
                 WHERE name = $1
                 GROUP BY name;
                 """
@@ -147,20 +147,6 @@ async def fetch_stats(name):
         )
 
     return stats
-
-
-async def info():
-    async with get_connection() as connection:
-        row = await connection.fetchrow(
-            """SELECT
-                most_recent,
-                least_recent,
-                difference,
-                running
-            FROM info;"""
-        )
-
-    return row
 
 
 async def fetch_all_stats():
@@ -175,7 +161,7 @@ async def fetch_all_stats():
                 SUM(bad_bot) AS bad_bot,
                 SUM(good_human) AS good_human,
                 SUM(bad_human) AS bad_human
-            FROM transcriptions;
+            FROM transcription_stats;
             """
         )
 
@@ -207,7 +193,7 @@ async def add_user(user, discord_id):
     async with get_connection() as connection:
         await connection.execute(
             """
-            INSERT INTO transcribers (name, discord_id)
+            INSERT INTO discord_user (name, discord_id)
                 VALUES ($1, $2)
             ON CONFLICT DO NOTHING;
             """,
@@ -220,7 +206,8 @@ async def get_transcriptions(name):
     async with get_connection() as connection:
         comment_ids = await connection.fetchval(
             """
-            SELECT comment_id
+            SELECT
+                comment_id
             FROM transcriptions
             WHERE transcriber = $1;
             """,

@@ -20,7 +20,7 @@ async def main():
             """
             SELECT
                 comment_id
-            FROM transcriptions
+            FROM transcription_stats
             WHERE permalink IS NULL;
             """
         )
@@ -43,7 +43,7 @@ async def main():
 
             await connection.execute(
                 """
-                UPDATE transcriptions
+                UPDATE transcription_stats
                     SET permalink = $1
                 WHERE comment_id = $2
                 """,

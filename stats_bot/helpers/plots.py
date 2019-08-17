@@ -119,7 +119,8 @@ async def plot_multi_history(
                 SELECT
                     DATE(time) AS date,
                     SUM(new_gamma - old_gamma) AS gamma_count
-                FROM gammas WHERE transcriber = $1 AND time BETWEEN $2 AND $3
+                FROM gammas
+                WHERE transcriber = $1 AND time BETWEEN $2 AND $3
                 GROUP BY DATE(TIME)
                 ORDER BY DATE(time) ASC;
                 """,
@@ -265,7 +266,8 @@ async def plot_rate(
                 SUM(new_gamma - old_gamma) AS gamma_count
             FROM gammas
             WHERE transcriber = $1 AND time BETWEEN $2 AND $3
-            GROUP BY DATE(TIME) ORDER BY DATE(time) ASC;
+            GROUP BY DATE(TIME)
+            ORDER BY DATE(time) ASC;
             """,
             name,
             start,
@@ -308,7 +310,8 @@ async def plot_all_rate():
                 SUM(new_gamma - old_gamma) AS gamma_count
             FROM gammas
             WHERE old_gamma IS NOT NULL
-            GROUP BY DATE(time) ORDER BY DATE(time) ASC;
+            GROUP BY DATE(time)
+            ORDER BY DATE(time) ASC;
             """
         )
 
@@ -386,7 +389,8 @@ async def plot_history(
                 SUM(new_gamma - old_gamma) AS gamma_count
             FROM gammas
             WHERE transcriber = $1 AND time BETWEEN $2 AND $3
-            GROUP BY DATE(TIME) ORDER BY DATE(time) ASC;
+            GROUP BY DATE(TIME)
+            ORDER BY DATE(time) ASC;
             """,
             name,
             start,

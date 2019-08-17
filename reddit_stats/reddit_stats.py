@@ -65,7 +65,7 @@ async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
                     GROUP BY transcriber
                     ORDER BY SUM(new_gamma - old_gamma) DESC
                 ) top_gammas
-                RIGHT OUTER JOIN transcribers ON name = transcriber
+                RIGHT OUTER JOIN transcription_stats ON name = transcriber
                 ORDER BY transcriber;
             """
         )
@@ -99,7 +99,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                 logging.info(f"/u/{user} is not a valid redditor.")
                 await connection.execute(
                     """
-                    UPDATE transcribers
+                    UPDATE redditor
                         SET valid = FALSE
                     WHERE name = $1;
                     """,
@@ -116,9 +116,10 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                     start_comment,
                     end_comment,
                     reference_comment,
-                    forwards,
+                    direction,
                     valid
                 FROM transcribers
+                INNER JOIN search ON search.transcriber =
                 WHERE name = $1;
             """,
             user,
@@ -130,7 +131,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             logging.info(f"New user: /u/{user}")
             await connection.execute(
                 """
-                INSERT INTO transcribers (name)
+                INSERT INTO redditors (name)
                 VALUES ($1);
                 """,
                 user,
@@ -145,7 +146,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         if valid is False or valid is None:
             await connection.execute(
                 """
-                UPDATE transcribers
+                UPDATE redditors
                     SET valid = TRUE
                 WHERE name = $1;
                 """,
@@ -165,10 +166,10 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         if start_comment is None or end_comment is None:
             await connection.execute(
                 """
-                UPDATE transcribers
+                UPDATE search
                     SET start_comment = $1,
                     end_comment = $1,
-                    forwards = FALSE
+                    direction = 'backwards'
                 WHERE name = $2
                 """,
                 first_comment.id,
@@ -233,7 +234,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
 
             await connection.execute(
                 """
-                UPDATE transcribers
+                UPDATE redditors
                     SET valid = FALSE
                 WHERE name = $1;
                 """,
@@ -256,8 +257,8 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                 logging.info(none_to_read)
                 await connection.execute(
                     """
-                    UPDATE transcribers
-                        SET forwards = TRUE
+                    UPDATE redditors
+                        SET direction = 'forwards'
                     WHERE name = $1;
                     """,
                     user,
@@ -323,7 +324,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                 await connection.execute(
                     """
                     UPDATE transcribers
-                        SET forwards = TRUE
+                        SET direction = 'forwards'
                     WHERE name = $1;
                     """,
                     user,
@@ -338,7 +339,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         if forwards is True:
             await connection.execute(
                 """
-                UPDATE transcribers
+                UPDATE search
                     SET start_comment = $1
                 WHERE name = $2;
                 """,
@@ -348,7 +349,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         else:
             await connection.execute(
                 """
-                UPDATE transcribers
+                UPDATE search
                     SET end_comment = $1
                 WHERE name = $2;
                 """,
@@ -438,7 +439,7 @@ async def update_gamma_count(user: str):
             if reference_comment is not None:
                 await connection.execute(
                     """
-                    UPDATE transcribers
+                    UPDATE search
                         SET reference_comment = NULL
                     WHERE name = $1;
                     """,
@@ -472,9 +473,9 @@ async def update_gamma_count(user: str):
 
             await connection.execute(
                 """
-                UPDATE transcribers
-                    SET official_gamma_count = $1
-                WHERE name = $2;
+                --UPDATE transcribers
+                --    SET official_gamma_count = $1
+                --WHERE name = $2;
                 """,
                 official_gamma,
                 user,
@@ -494,7 +495,8 @@ async def announce_gamma(user, before, after):
             SELECT discord_id
             FROM transcribers
             WHERE name = $1;
-            """, user
+            """,
+            user,
         )
 
     if discord_id is not None:

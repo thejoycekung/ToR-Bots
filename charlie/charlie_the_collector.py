@@ -34,7 +34,7 @@ async def analyze_transcription(transcription, refresh_retries=3):
         async with database.get_connection() as connection:
             await connection.execute(
                 """
-                UPDATE transcriptions
+                UPDATE transcription_stats
                     SET good_bot = 0,
                     bad_bot = 0,
                     good_human = 0,
@@ -82,7 +82,7 @@ async def analyze_transcription(transcription, refresh_retries=3):
     async with database.get_connection() as connection:
         await connection.execute(
             """
-            UPDATE transcriptions
+            UPDATE transcription_stats
                 SET good_bot = $1,
                 bad_bot = $2,
                 good_human = $3,
