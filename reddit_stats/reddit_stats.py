@@ -15,7 +15,7 @@ client = discord.Client()
 reddit = praw.Reddit(
     client_id=passwords_and_tokens.reddit_id,
     client_secret=passwords_and_tokens.reddit_token,
-    user_agent="Lornebot 0.0.1",
+    user_agent=passwords_and_tokens.user_agent,
 )
 
 tor = reddit.subreddit("TranscribersOfReddit")
