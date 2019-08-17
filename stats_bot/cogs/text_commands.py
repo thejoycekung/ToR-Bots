@@ -6,7 +6,7 @@ import praw
 from discord.ext import commands
 
 from .. import passwords_and_tokens
-from ..helpers import add_user, database_reader, get_redditor_name
+from ..helpers import add_user, database_reader, get_redditor_name, redditor_or_author
 from ..utils.converters import Redditor
 from ..utils.paginator import ToRPaginator
 
@@ -65,7 +65,7 @@ class TextCommands(commands.Cog):
 
     @commands.command(aliases=["torstats", "transcriptions", "stats"])
     async def tor_stats(self, ctx, redditor: Redditor = None):
-        author = get_redditor_name(ctx.message.author.display_name)
+        author = await redditor_or_author(ctx, redditor)
         username = author if redditor is None else redditor.name
 
         stats = await database_reader.fetch_stats(username)
@@ -277,11 +277,7 @@ class TextCommands(commands.Cog):
             )
             return
 
-        username = (
-            redditor.name
-            if redditor is not None
-            else get_redditor_name(ctx.message.author.display_name)
-        )
+        username = await redditor_or_author(ctx, redditor)
         leaderboard = []
         top_leaderboard_size = 5
 
@@ -360,7 +356,6 @@ class TextCommands(commands.Cog):
 
     @commands.command(hidden=True)
     async def where(self, ctx, *, looking_for):
-
         redditor_name = get_redditor_name(ctx.message.author.display_name)
         comments = await database_reader.find_comments(looking_for, name=redditor_name)
 
@@ -410,11 +405,7 @@ class TextCommands(commands.Cog):
             await ctx.send(f"I dunno ∞ in {hours} hours? You better do it now.")
             return
 
-        name = (
-            get_redditor_name(ctx.message.author.display_name)
-            if redditor is None
-            else redditor.name
-        )
+        name = await redditor_or_author(ctx, redditor)
 
         imaginary_progress_bar = "###[iiiiiiiiii]"
         blank_progress_bar = "[----------]"

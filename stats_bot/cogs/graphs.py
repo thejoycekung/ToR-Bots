@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 from ..helpers import plots
-from ..helpers import get_redditor_name
+from ..helpers import get_redditor_name, redditor_or_author
 from ..utils.converters import Date, Redditor
 
 NO_HISTORY_AVAILABLE = (
@@ -43,20 +43,18 @@ class GraphCommands(commands.Cog):
     ):
         single_user = redditors is None or len(redditors) < 2
         if single_user is True:
-            author = get_redditor_name(ctx.message.author.display_name)
-            username = (
-                author if redditors is None else get_redditor_name(redditors[0].name)
-            )
+            username = await redditor_or_author(ctx, redditors[0])
 
             history_plot = await plots.plot_history(username, start, end, False)
         else:
-            usernames = [get_redditor_name(redditor.name) for redditor in redditors]
+            usernames = [redditor.name for redditor in redditors]
             history_plot = await plots.plot_multi_history(usernames, start, end)
 
         if history_plot is None:
             if start is not None or end is not None:
                 await ctx.send(NO_TRANSCRIPTIONS_DURING_TIME)
             else:
+                author = get_redditor_name(ctx.message.author.display_name)
                 if single_user is True:
                     if username.casefold() == author.casefold():
                         await ctx.send(NO_HISTORY_AVAILABLE_FOR_YOU)
@@ -75,14 +73,8 @@ class GraphCommands(commands.Cog):
         start: typing.Optional[Date] = None,
         end: typing.Optional[Date] = None,
     ):
-        name = (
-            get_redditor_name(ctx.message.author.display_name)
-            if redditor is None
-            else redditor.name
-        )
-        context_history_plot = await plots.plot_history(
-            get_redditor_name(name), start, end, True
-        )
+        name = await redditor_or_author(ctx, redditor)
+        context_history_plot = await plots.plot_history(name, start, end, True)
 
         if context_history_plot is None:
             if start is not None or end is not None:
@@ -121,12 +113,11 @@ class GraphCommands(commands.Cog):
         start: typing.Optional[Date] = None,
         end: typing.Optional[Date] = None,
     ):
-        author = get_redditor_name(ctx.message.author.display_name)
-        username = author if redditor is None else redditor.name
-        username = get_redditor_name(username)
+        username = await redditor_or_author(ctx, redditor)
 
         rate_plot = await plots.plot_rate(username, start, end)
         if rate_plot is None:
+            author = get_redditor_name(ctx.message.author.display_name)
             if username.casefold() == author.casefold():
                 await ctx.send(NO_HISTORY_AVAILABLE_FOR_YOU)
             else:

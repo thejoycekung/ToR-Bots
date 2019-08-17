@@ -1,4 +1,5 @@
 import datetime
+import re
 
 import praw
 import prawcore
@@ -16,8 +17,22 @@ reddit = praw.Reddit(
 
 class Redditor(commands.Converter):
     async def convert(self, ctx: commands.Context, username: str):
-        name = get_redditor_name(username)
-        user = reddit.redditor(name)
+        # Regex taken directly from the source of discord.py the rest of the
+        # user id conversion is inspired from it.
+        # See discord.py/discord/ext/commands/converter.py L117
+        match = re.match(r"<@!?([0-9]+)>$", username)
+        if match is not None:
+            user_id = int(match.group(1))
+            member = ctx.guild.get_member(user_id)
+            username = get_redditor_name(member.display_name)
+        else:
+            # Full member name recognition shouldn't be supported.
+            if username.startswith("/u/"):
+                username = username[3:]
+            elif username.startswith("u/"):
+                username = username[2:]
+
+        user = reddit.redditor(username)
 
         try:
             next(user.comments.new(limit=1))
