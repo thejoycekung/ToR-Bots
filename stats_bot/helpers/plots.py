@@ -41,7 +41,7 @@ async def plot_all_history(
             """
             SELECT
                 DATE(time) AS day,
-                SUM(gamma)
+                SUM(gamma) AS gamma_count
             FROM new_gammas WHERE time BETWEEN $1 AND $2
             GROUP BY DATE(time) ORDER BY DATE(time) ASC;
             """,
@@ -57,7 +57,7 @@ async def plot_all_history(
 
     for row in rows:
         days.append(row["day"])
-        gamma_counts.append(row["gamma"])
+        gamma_counts.append(row["gamma_count"])
 
     plot.plot(days, gamma_counts, color="black")
 
