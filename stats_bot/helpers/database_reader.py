@@ -55,7 +55,7 @@ async def get_flair_count(reddit_name, discord_id):
 async def get_last_x_hours(reddit_name, hours=24):
     async with get_connection() as connection:
         gamma_records = await connection.fetch(
-            """"
+            """
             SELECT
                 old_gamma,
                 new_gamma
