@@ -22,12 +22,12 @@ reddit = praw.Reddit(
 
 gamma_ranks = {
     "initiate": 1,
-    "green": 51,
-    "teal": 101,
-    "purple": 251,
-    "gold": 501,
-    "diamond": 1001,
-    "ruby": 2501,
+    "green": 50,
+    "teal": 100,
+    "purple": 250,
+    "gold": 500,
+    "diamond": 1000,
+    "ruby": 2500,
 }
 
 
