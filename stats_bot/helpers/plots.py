@@ -145,16 +145,16 @@ async def plot_multi_history(
         plot.plot(times, values, color=cols[i % len(cols)])
 
     if whole or most >= 50:
-        plot.axhline(y=51, color="lime")
+        plot.axhline(y=50, color="lime")
 
     if whole or most >= 100:
-        plot.axhline(y=101, color="teal")
+        plot.axhline(y=100, color="teal")
 
     if whole or most >= 250:
-        plot.axhline(y=251, color="purple")
+        plot.axhline(y=250, color="purple")
 
     if whole or most >= 500:
-        plot.axhline(y=501, color="gold")
+        plot.axhline(y=500, color="gold")
 
     if whole or most >= 1000:
         plot.axhline(y=1000, color="aqua")
@@ -409,18 +409,18 @@ async def plot_history(
     last = values[-1]
 
     if whole or first <= 50 < last:
-        plot.axhline(y=51, color="lime")
+        plot.axhline(y=50, color="lime")
 
     if whole or first <= 100 < last:
-        plot.axhline(y=101, color="teal")
+        plot.axhline(y=100, color="teal")
 
     if whole or first <= 250 < last:
-        plot.axhline(y=251, color="purple")
+        plot.axhline(y=250, color="purple")
 
     if whole or first <= 500 < last:
-        plot.axhline(y=501, color="gold")
+        plot.axhline(y=500, color="gold")
 
-    if whole or first < 1000 <= last:
+    if whole or first <= 1000 < last:
         plot.axhline(y=1000, color="aqua")
 
     if whole or last >= 2500:
