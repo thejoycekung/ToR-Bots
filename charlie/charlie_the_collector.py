@@ -20,11 +20,15 @@ async def analyze_transcription(transcription, refresh_retries=3):
         except Exception:
             continue
         else:
+            if i != 0:
+                logging.warning(
+                    f"Error in refresh {i} times for transcription: {transcription.id}"
+                )
             break
     else:
-        logging.info(
-            f"Error in refresh {refresh_retries} times for transcription: "
-            f"{transcription.id}"
+        logging.warning(
+            f"Could not get information after {refresh_retries} refreshes "
+            f"for transcription: {transcription.id}"
         )
 
         async with database.get_connection() as connection:
@@ -40,14 +44,14 @@ async def analyze_transcription(transcription, refresh_retries=3):
     if replies is None:
         logging.info(f"No replies to transcription: {transcription.id}")
         return
-        
+
     replies.replace_more(0)
 
     comment_count = good_bot = bad_bot = good_human = bad_human = 0
 
     for comment in replies:
         comment_count += 1
-        content = comment.body.lower()
+        content = comment.body.casefold()
         if "good bot" in content:
             good_bot += 1
 
@@ -85,7 +89,7 @@ async def analyze_all_transcriptions():
     async with database.get_connection() as connection:
         transcriptions = await connection.fetch(
             "SELECT comment_id FROM transcriptions WHERE "
-            "EXTRACT(epoch from now()) - EXTRACT(epoch from found) < (24 * 60 * 60) OR "
+            "EXTRACT(epoch FROM NOW()) - EXTRACT(epoch FROM found) < (24 * 60 * 60) OR "
             "last_checked IS NULL OR good_bot IS NULL OR bad_bot IS NULL OR "
             "good_human IS NULL OR bad_human IS NULL ORDER BY last_checked ASC"
         )

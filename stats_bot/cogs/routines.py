@@ -101,7 +101,7 @@ class RoutineCog(commands.Cog, command_attrs={"hidden": True}):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.display_name == after.display_name:
+        if before.display_name.casefold() == after.display_name.casefold():
             return
 
         logging.info(
@@ -115,7 +115,7 @@ class RoutineCog(commands.Cog, command_attrs={"hidden": True}):
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
-        if before.name == after.name:
+        if before.name.casefold() == after.name.casefold():
             return
 
         logging.info(

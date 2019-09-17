@@ -34,7 +34,7 @@ def is_transcription(comment):
         return "www.reddit.com/r/TranscribersOfReddit" in body and "&#32;" in body
     else:
         # For legacy transcriptions.
-        body = comment.body.lower()
+        body = comment.body.casefold()
         return (
             "human" in body
             and "content" in body
@@ -219,7 +219,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         for comment in reddit_comments:
             if is_transcription(comment):
                 return_value = await add_transcription(
-                    user, first_comment, connection=connection
+                    user, comment, connection=connection
                 )
 
                 transcriptions += 1
@@ -246,8 +246,8 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             user,
         )
 
-        s = "s" if transcriptions != 0 else ""
-        new_s = "s" if new_transcriptions != 0 else ""
+        s = "s" if transcriptions != 1 else ""
+        new_s = "s" if new_transcriptions != 1 else ""
         logging.info(
             f"Found {transcriptions} total transcription{s}. "
             f"Added {new_transcriptions} new transcription{new_s}."
