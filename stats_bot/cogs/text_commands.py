@@ -30,7 +30,7 @@ gamma_ranks = {
     "diamond": 1000,
     "ruby": 2500,
     "topaz": 5000,
-    "jade": 10000
+    "jade": 10000,
 }
 
 
