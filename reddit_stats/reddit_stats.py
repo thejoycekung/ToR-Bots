@@ -617,7 +617,7 @@ async def priority_user_loop(delay=30):
         logging.info(f"--- Priority User Round End ({duration}) ---")
         await asyncio.sleep(delay)
 
-async def reddit_stats():
+async def main():
     await database.create_pool()
 
     logging.getLogger().setLevel(logging.INFO)
@@ -634,4 +634,6 @@ async def reddit_stats():
 
 
 if __name__ == "__main__":
-    asyncio.run(reddit_stats())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+    loop.close()
