@@ -103,7 +103,7 @@ async def plot_multi_history(
         end += datetime.timedelta(days=1)
 
     most = 0
-    cols = ["black", "green", "red", "teal", "purple", "gold", "deeppink", "orangered", "forestgreen"]
+    cols = ["black", "green", "red", "teal", "purple", "gold", "deeppink", "orangered", "forestgreen", "royalblue"]
 
     for i, redditor in enumerate(redditors):
         if isinstance(redditor, praw.models.Redditor):
@@ -167,6 +167,9 @@ async def plot_multi_history(
 
     if whole or most >= 10000:
         plot.axhline(y=10000, color="forestgreen")
+    
+    if whole or most >= 25000:
+        plot.axhline(y=25000, color="royalblue")
 
     plot.xlabel("Time")
     plot.ylabel("Gammas")
@@ -437,6 +440,9 @@ async def plot_history(
     
     if whole or last >= 10000:
         plot.axhline(y=10000, color="forestgreen")
+    
+    if whole or last >= 25000:
+        plot.axhline(y=25000, color="royalblue")
 
     plot.xlabel("Time")
     plot.ylabel("Gammas")

@@ -31,6 +31,7 @@ gamma_ranks = {
     "ruby": 2500,
     "topaz": 5000,
     "jade": 10000,
+    "sapphire": 25000,
 }
 
 
