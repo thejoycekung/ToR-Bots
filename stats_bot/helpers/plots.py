@@ -12,6 +12,24 @@ from . import database_reader
 
 matplotlib.use("AGG")
 
+# Colors to use in the plots
+background_color = "#4e6186"
+text_color = "white"
+line_color = "gray"
+
+# Global settings for the plots
+plot.rcParams['figure.facecolor'] = background_color
+plot.rcParams['axes.facecolor'] = background_color
+plot.rcParams['axes.labelcolor'] = text_color
+plot.rcParams['axes.edgecolor'] = line_color
+plot.rcParams['text.color'] = text_color
+plot.rcParams['xtick.color'] = line_color
+plot.rcParams['xtick.labelcolor'] = text_color
+plot.rcParams['ytick.color'] = line_color
+plot.rcParams['ytick.labelcolor'] = text_color
+plot.rcParams['grid.color'] = line_color
+plot.rcParams['grid.alpha'] = 0.8
+plot.rcParams["figure.dpi"] = 200.0
 
 async def plot_all_history(
     start: typing.Union[datetime.date, str] = None,
