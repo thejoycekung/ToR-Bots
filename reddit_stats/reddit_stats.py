@@ -243,7 +243,6 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             )
             return
 
-        reddit_comments = [reddit.comment(comment.id) for comment in comments]
         comment_count = len(comments)
 
         end_reached = f"Reached the end of /u/{user}'s comments."
@@ -270,7 +269,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
 
         transcriptions = 0
         new_transcriptions = 0
-        for comment in reddit_comments:
+        for comment in comments:
             if is_transcription(comment):
                 return_value = await add_transcription(
                     user, comment, connection=connection
@@ -314,8 +313,8 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             f"Added {new_transcriptions} new transcription{new_s}."
         )
 
-        first_checked_comment = reddit_comments[0].id
-        last_checked_comment = reddit_comments[-1].id
+        first_checked_comment = comments[0].id
+        last_checked_comment = comments[-1].id
 
         if comment_count < limit:
             if forwards is True:
