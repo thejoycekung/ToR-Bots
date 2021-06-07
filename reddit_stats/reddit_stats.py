@@ -129,7 +129,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         new_user = transcriber is None
 
         if new_user is True:
-            logging.info(f"New user: /u/{user}")
+            logging.info(f"  New user: /u/{user}")
             await connection.execute(
                 """
                 INSERT INTO transcribers (name)
@@ -159,7 +159,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
 
         if first_comment == start_comment:
             if forwards is True:
-                logging.info(f"/u/{user} has no unchecked comments")
+                logging.info(f"  /u/{user} has no unchecked comments")
                 return
         elif prioritize_new is True and forwards is True:
             forwards = True
@@ -186,7 +186,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                 )
             elif is_reference_comment(first_comment):
                 reference_comment = first_comment.id
-                logging.info(f"Setting reference comment to {reference_comment}")
+                logging.info(f"  Setting reference comment to {reference_comment}")
                 await connection.execute(
                     """
                     UPDATE transcribers
@@ -223,14 +223,14 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         )
 
         logging.info(
-            f"Fetching {up_to}comments for /u/{user} reading {direction}"
+            f"  Fetching {up_to} comments for /u/{user} reading {direction} "
             f"{comment_with_id}."
         )
         try:
             comments = list(redditor.comments.new(params=params))
         except prawcore.exceptions.PrawcoreException:
             logging.warn(
-                f"Exception {traceback.format_exc()}\n Setting /u/{user} to invalid"
+                f"  Exception {traceback.format_exc()}\n Setting /u/{user} to invalid"
             )
 
             await connection.execute(
@@ -245,9 +245,9 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
 
         comment_count = len(comments)
 
-        end_reached = f"Reached the end of /u/{user}'s comments."
-        newest_reached = f"Reached /u/{user}'s newest comment."
-        none_to_read = "No comments to read."
+        end_reached = f"  Reached the end of /u/{user}'s comments."
+        newest_reached = f"  Reached /u/{user}'s newest comment."
+        none_to_read = "  No comments to read."
         if comment_count == 0:
             if forwards is True:
                 logging.info(newest_reached)
@@ -265,7 +265,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                 )
             return
 
-        logging.info(f"Reading {comment_count} comments for /u/{user}.")
+        logging.info(f"  Reading {comment_count} comments for /u/{user}.")
 
         transcriptions = 0
         new_transcriptions = 0
@@ -284,7 +284,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                 and comment.author_flair_text is not None
             ):
                 reference_comment = comment.id
-                logging.info(f"Setting reference comment to {reference_comment}")
+                logging.info(f"  Setting reference comment to {reference_comment}")
                 await connection.execute(
                     """
                     UPDATE transcribers
@@ -309,7 +309,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         s = "s" if transcriptions != 1 else ""
         new_s = "s" if new_transcriptions != 1 else ""
         logging.info(
-            f"Found {transcriptions} total transcription{s}. "
+            f"  Found {transcriptions} total transcription{s}. "
             f"Added {new_transcriptions} new transcription{new_s}."
         )
 
@@ -332,7 +332,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             return
 
         logging.info(
-            f"Reached comment with id {last_checked_comment} "
+            f"  Reached comment with id {last_checked_comment} "
             f"from {first_checked_comment}"
         )
 
