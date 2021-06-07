@@ -223,7 +223,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         )
 
         # If the gamma didn't change we don't need to look through all the comments
-        if not gamma_changed and forwards is True:
+        if gamma_changed is False and forwards is True:
             logging.info(f"  No new transcriptions, setting start_comment to {first_comment.id} and skipping comment check")
             await connection.execute(
                 """
@@ -496,6 +496,7 @@ async def update_gamma_count(user: str):
             )
 
             await announce_gamma(user, old_gamma, official_gamma)
+            return True
         elif old_gamma < official_gamma:
             logging.info(f"Old gamma is less than new gamma for /u/{user}")
             return True
