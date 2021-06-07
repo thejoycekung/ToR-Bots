@@ -155,7 +155,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
             )
 
         if reference_comment is not None:
-            await update_gamma_count(user)
+            gamma_changed = await update_gamma_count(user)
 
         if first_comment == start_comment:
             if forwards is True:
@@ -196,7 +196,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                     reference_comment,
                     user,
                 )
-                await update_gamma_count(user)
+                gamma_changed = await update_gamma_count(user)
 
         params = {}
         if forwards is True:
@@ -221,6 +221,20 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         comment_with_id = (
             f" starting at comment with id: {comment}" if comment is not None else ""
         )
+
+        # If the gamma didn't change we don't need to look through all the comments
+        if not gamma_changed and forwards is True:
+            logging.info(f"  No new transcriptions, setting start_comment to {first_comment.id} and skipping comment check")
+            await connection.execute(
+                """
+                UPDATE transcribers
+                    SET start_comment = $1
+                WHERE name = $2;
+                """,
+                first_comment.id,
+                user,
+            )
+            return
 
         logging.info(
             f"  Fetching {up_to} comments for /u/{user} reading {direction} "
@@ -294,7 +308,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
                     reference_comment,
                     user,
                 )
-                await update_gamma_count(user)
+                gamma_changed = await update_gamma_count(user)
 
         await connection.execute(
             """
@@ -419,7 +433,7 @@ async def update_gamma_count(user: str):
 
         if reference_comment is None:
             logging.warn(f"Reference comment could not be found for /u/{user}")
-            return
+            return True
 
         reference_comment = reddit.comment(reference_comment)
 
@@ -447,7 +461,7 @@ async def update_gamma_count(user: str):
                 )
 
             logging.warn(no_flair_message)
-            return
+            return True
 
         try:
             official_gamma = int(flair.split(" ")[0])
@@ -484,8 +498,10 @@ async def update_gamma_count(user: str):
             await announce_gamma(user, old_gamma, official_gamma)
         elif old_gamma < official_gamma:
             logging.info(f"Old gamma is less than new gamma for /u/{user}")
+            return True
         else:
             logging.info(f"/u/{user} has {official_gamma}Γ. It did not change.")
+            return False
 
 
 async def announce_gamma(user, before, after):
