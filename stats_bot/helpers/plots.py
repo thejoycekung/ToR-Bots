@@ -9,6 +9,7 @@ import matplotlib.ticker
 import praw
 
 from . import database_reader
+from ..helpers import text_color
 
 matplotlib.use("AGG")
 
@@ -58,7 +59,7 @@ async def plot_all_history(
         days.append(row["day"])
         gamma_counts.append(row["gamma_count"])
 
-    plot.plot(days, gamma_counts, color="black")
+    plot.plot(days, gamma_counts, color=text_color)
 
     plot.xlabel("Time")
     plot.ylabel("Gammas")
@@ -287,7 +288,7 @@ async def plot_rate(
         times.append(row["date"])
         values.append(row["gamma_count"])
 
-    plot.plot(times, values, color="black")
+    plot.plot(times, values, color=text_color)
 
     plot.xlabel("Time")
     plot.ylabel("Gammas / Day")
@@ -412,7 +413,7 @@ async def plot_history(
         times.append(row["date"])
         values.append(total_gamma)
 
-    plot.plot(times, values, color="black")
+    plot.plot(times, values, color=text_color)
     first = values[0]
     last = values[-1]
 

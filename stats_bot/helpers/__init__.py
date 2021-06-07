@@ -5,9 +5,9 @@ from .database_reader import delete_transcriber,fetch_transcribers
 __all__ = ["get_redditor_name", "add_user", "delete_transcriber", "fetch_transcribers"]
 
 # Colors to use in the plots
-background_color = "#4e6186"
+background_color = "#36393f"
 text_color = "white"
-line_color = "gray"
+line_color = "white"
 
 # Global settings for the plots
 plot.rcParams['figure.facecolor'] = background_color
