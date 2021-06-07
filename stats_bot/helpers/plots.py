@@ -431,6 +431,12 @@ async def plot_history(
 
     if whole or last >= 2500:
         plot.axhline(y=2500, color="deeppink")
+    
+    if whole or last >= 5000:
+        plot.axhline(y=5000, color="orangered")
+    
+    if whole or last >= 10000:
+        plot.axhline(y=10000, color="forestgreen")
 
     plot.xlabel("Time")
     plot.ylabel("Gammas")
