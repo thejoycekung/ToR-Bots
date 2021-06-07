@@ -104,7 +104,7 @@ async def analyze_transcription(transcription, refresh_retries=3):
         )
 
 
-async def analyze_all_transcriptions():
+async def analyze_all_transcriptions(delay=2.0):
     async with database.get_connection() as connection:
         transcriptions = await connection.fetch(
             """
@@ -127,6 +127,8 @@ async def analyze_all_transcriptions():
             f"Analyzing /u/{transcription.author}'s transcription: {transcription.id}"
         )
         await analyze_transcription(transcription)
+        # Wait a bit to not "steal" all the API calls
+        await asyncio.sleep(delay)
 
 
 async def analyze_loop(timeout=60.0):
