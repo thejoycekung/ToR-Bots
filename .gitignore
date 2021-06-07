@@ -2,3 +2,5 @@
 **/passwords_and_tokens.py
 **/leaderboard.txt
 pg_data
+
+.vscode
