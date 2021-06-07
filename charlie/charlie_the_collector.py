@@ -104,7 +104,7 @@ async def analyze_transcription(transcription, refresh_retries=3):
         )
 
 
-async def analyze_all_transcriptions(delay=2.0):
+async def analyze_all_transcriptions(delay=4.0):
     async with database.get_connection() as connection:
         transcriptions = await connection.fetch(
             """

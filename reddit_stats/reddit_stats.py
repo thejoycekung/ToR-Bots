@@ -544,7 +544,7 @@ async def announce_gamma(user, before, after):
         )
 
 
-async def analyze_priority_users(limit=100, from_newest=False, prioritize_new=True, delay=1.0):
+async def analyze_priority_users(limit=100, from_newest=False, prioritize_new=True, delay=2.5):
     """
     Analyzes the most active users (the users with the most transcriptions in the last week).
     """
@@ -570,9 +570,10 @@ async def analyze_priority_users(limit=100, from_newest=False, prioritize_new=Tr
 
     for transcriber in transcribers:
         await analyze_user(transcriber["name"], limit, from_newest, prioritize_new)
+        await asyncio.sleep(delay)
 
 
-async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
+async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True, delay=2.0):
     if limit > 100:
         raise UserWarning(batch_one_hundred)
 
@@ -595,6 +596,7 @@ async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
 
     for transcriber in transcribers:
         await analyze_user(transcriber["name"], limit, from_newest, prioritize_new)
+        await asyncio.sleep(delay)
 
 
 async def all_user_loop(delay=30):
