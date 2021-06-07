@@ -77,6 +77,8 @@ async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
 
 
 async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
+    gamma_changed = True
+
     if limit > 100:
         raise UserWarning(batch_one_hundred)
 
