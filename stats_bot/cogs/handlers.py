@@ -1,4 +1,5 @@
 import logging
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 import traceback
 
 from discord.ext import commands

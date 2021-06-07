@@ -162,6 +162,12 @@ async def plot_multi_history(
     if whole or most >= 2500:
         plot.axhline(y=2500, color="deeppink")
 
+    if whole or most >= 5000:
+        plot.axhline(y=5000, color="orangered")
+
+    if whole or most >= 10000:
+        plot.axhline(y=10000, color="forestgreen")
+
     plot.xlabel("Time")
     plot.ylabel("Gammas")
     plot.xticks(rotation=90)

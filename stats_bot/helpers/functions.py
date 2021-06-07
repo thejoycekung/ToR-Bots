@@ -6,7 +6,9 @@ def get_redditor_name(name):
     """Extracts a redditor's name from nicknames.
     Ignores /u/ or u/ and then reads up to a space, comma or a pipe character.
     """
-    return re.match("^(?:/u/|u/)?([^\s|]*)", name).group(1)
+    match = re.match("^(?:/u/|u/)?([^\s|]*)", name).group(1)
+    print("Match for "+name+" is "+str(match));
+    return match
 
 
 async def add_user(user, user_snowflake):

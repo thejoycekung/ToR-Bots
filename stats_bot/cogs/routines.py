@@ -1,4 +1,5 @@
 import logging
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 import os
 
 import discord.utils
@@ -6,13 +7,14 @@ import praw
 from discord.ext import commands, tasks
 
 from .. import passwords_and_tokens
-from ..helpers import database_reader, add_user
+from ..helpers import database_reader, add_user, fetch_transcribers, delete_transcriber, get_redditor_name
 from ..utils.permissions import is_owner
 
 reddit = praw.Reddit(
     client_id=passwords_and_tokens.reddit_id,
     client_secret=passwords_and_tokens.reddit_token,
     user_agent="Lornebot 0.0.1",
+    check_for_async=False
 )
 
 data_directory = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, "data"))
@@ -88,6 +90,7 @@ class RoutineCog(commands.Cog, command_attrs={"hidden": True}):
         self.tor_guild = self.bot.get_guild(TOR)
 
         await self._add_members()
+        await self._cleanup()
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -147,6 +150,24 @@ class RoutineCog(commands.Cog, command_attrs={"hidden": True}):
             await add_user(member.display_name, member.id)
 
         logging.info("Finished adding users.")
+
+    async def _cleanup(self):
+        logging.info("Cleaning up database")
+
+        member_names = [ get_redditor_name(m.display_name).lower() for m in self.tor_guild.members ]
+        print(member_names)
+        return
+
+        transcribers = await fetch_transcribers();
+        clean_count = 0
+        for transcriber in transcribers:
+            if transcriber['name'].lower() not in member_names:
+                clean_count += 1
+                logging.info("THANOS Snapped {} out of existance".format(transcriber['name']))
+                await delete_transcriber(transcriber['name'])
+
+        logging.info("Purged {} members".format(clean_count));
+
 
     @tasks.loop(seconds=60.0)
     async def refresh_leaderboard_loop(ctx):

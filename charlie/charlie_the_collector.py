@@ -1,6 +1,6 @@
 import asyncio
 import logging
-
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 import praw
 
 import database
@@ -10,6 +10,7 @@ reddit = praw.Reddit(
     client_id=passwords_and_tokens.reddit_id,
     client_secret=passwords_and_tokens.reddit_token,
     user_agent="Lornebot 0.0.1",
+    check_for_async=False
 )
 
 

@@ -18,6 +18,7 @@ reddit = praw.Reddit(
     client_id=passwords_and_tokens.reddit_id,
     client_secret=passwords_and_tokens.reddit_token,
     user_agent="Lornebot 0.0.1",
+    check_for_async=False
 )
 
 gamma_ranks = {
@@ -28,6 +29,8 @@ gamma_ranks = {
     "gold": 500,
     "diamond": 1000,
     "ruby": 2500,
+    "topaz": 5000,
+    "jade": 10000
 }
 
 

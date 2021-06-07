@@ -215,6 +215,30 @@ async def add_user(user, discord_id):
             discord_id,
         )
 
+async def delete_transcriber(user):
+    async with get_connection() as connection:
+        await connection.execute(
+            """
+            DELETE FROM transcriptions WHERE transcriber=$1;
+            """,
+            user
+        )
+        await connection.execute(
+            """
+            DELETE FROM transcribers WHERE name=$1;
+            """,
+            user
+        )
+
+async def fetch_transcribers():
+    async with get_connection() as connection:
+        transcribers = await connection.fetch(
+            """
+            SELECT * FROM transcribers;
+            """
+        )
+    return transcribers
+
 
 async def get_transcriptions(name):
     async with get_connection() as connection:

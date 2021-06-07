@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 import traceback
 
 import discord
@@ -16,6 +17,7 @@ reddit = praw.Reddit(
     client_id=passwords_and_tokens.reddit_id,
     client_secret=passwords_and_tokens.reddit_token,
     user_agent="Lornebot 0.0.1",
+    check_for_async=False
 )
 
 tor = reddit.subreddit("TranscribersOfReddit")
@@ -94,7 +96,7 @@ async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
         try:
             redditor_id = getattr(redditor, "id")
             first_comment = next(redditor.comments.new(limit=1))
-        except (prawcore.exceptions.PrawcoreException, AttributeError, StopIteration):
+        except BaseException:
             if redditor_id is None:
                 logging.info(f"/u/{user} is not a valid redditor.")
                 await connection.execute(
