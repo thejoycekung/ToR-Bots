@@ -51,6 +51,33 @@ batch_one_hundred = (
 )
 
 
+async def analyze_priority_users(limit=100, from_newest=False, prioritize_new=True, delay=1.0):
+    """
+    Analyzes the most active users (the users with the most transcriptions in the last week).
+    """
+    if limit > 100:
+        raise UserWarning(batch_one_hundred)
+
+    async with database.get_connection() as connection:
+        # Gets the 25 transcribers with the most transcriptions in the last week
+        transcribers = await connection.fetch(
+            """
+            SELECT transcriber
+            FROM (
+                SELECT transcriber, SUM(new_gamma - old_gamma) AS gamma
+                FROM gammas
+                WHERE time > (NOW() - interval '1 week')
+                GROUP BY transcriber
+                ORDER BY gamma DESC
+                LIMIT 25
+            ) AS accumulated
+            WHERE gamma > 5;
+            """
+        )
+
+    for transcriber in transcribers:
+        await analyze_user(transcriber["name"], limit, from_newest, prioritize_new)
+
 async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
     if limit > 100:
         raise UserWarning(batch_one_hundred)
@@ -568,21 +595,43 @@ async def announce_gamma(user, before, after):
             "Congratulations for being one of the first.",
         )
 
+async def all_user_loop(delay=30):
+    "Loops the analysis of all users."
+    while True:
+        start = datetime.datetime.now()
+        logging.info("--- All User Round Start ---")
+        await analyze_all_users()
+        end = datetime.datetime.now()
+        duration = end - start
+        logging.info(f"--- All User Round End ({duration}) ---")
+        await asyncio.sleep(delay)
 
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
+async def priority_user_loop(delay=30):
+    "Loops the analysis of priority users."
+    while True:
+        start = datetime.datetime.now()
+        logging.info("--- Priority User Round Start ---")
+        await analyze_priority_users()
+        end = datetime.datetime.now()
+        duration = end - start
+        logging.info(f"--- Priority User Round End ({duration}) ---")
+        await asyncio.sleep(delay)
 
-    loop.run_until_complete(database.create_pool())
+async def reddit_stats():
+    await database.create_pool()
 
     logging.getLogger().setLevel(logging.INFO)
 
     try:
-        loop.run_until_complete(client.login(passwords_and_tokens.discord_token))
+        await client.login(passwords_and_tokens.discord_token)
         while True:
-            loop.run_until_complete(analyze_all_users())
-            logging.info("--- Round done ---")
-            loop.run_until_complete(asyncio.sleep(60))
+            # Execute both loops concurrently.
+            # This should never terminate, as both tasks are infinite loops.
+            await asyncio.gather(all_user_loop(), priority_user_loop())
     finally:
-        loop.run_until_complete(client.close())
-        loop.run_until_complete(database.close_pool())
-        loop.close()
+        await client.close()
+        await database.close_pool()
+
+
+if __name__ == "__main__":
+    asyncio.run(reddit_stats())
