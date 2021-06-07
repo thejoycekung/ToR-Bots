@@ -51,58 +51,6 @@ batch_one_hundred = (
 )
 
 
-async def analyze_priority_users(limit=100, from_newest=False, prioritize_new=True, delay=1.0):
-    """
-    Analyzes the most active users (the users with the most transcriptions in the last week).
-    """
-    if limit > 100:
-        raise UserWarning(batch_one_hundred)
-
-    async with database.get_connection() as connection:
-        # Gets the 25 transcribers with the most transcriptions in the last week
-        transcribers = await connection.fetch(
-            """
-            SELECT transcriber
-            FROM (
-                SELECT transcriber, SUM(new_gamma - old_gamma) AS gamma
-                FROM gammas
-                WHERE time > (NOW() - interval '1 week')
-                GROUP BY transcriber
-                ORDER BY gamma DESC
-                LIMIT 25
-            ) AS accumulated
-            WHERE gamma > 5;
-            """
-        )
-
-    for transcriber in transcribers:
-        await analyze_user(transcriber["name"], limit, from_newest, prioritize_new)
-
-async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
-    if limit > 100:
-        raise UserWarning(batch_one_hundred)
-
-    async with database.get_connection() as connection:
-        transcribers = await connection.fetch(
-            """
-            SELECT
-                COALESCE(transcriber, name) AS name
-                FROM (
-                    SELECT transcriber
-                    FROM gammas
-                    WHERE time > NOW() - interval '24 hours'
-                    GROUP BY transcriber
-                    ORDER BY SUM(new_gamma - old_gamma) DESC
-                ) top_gammas
-                RIGHT OUTER JOIN transcribers ON name = transcriber
-                ORDER BY transcriber;
-            """
-        )
-
-    for transcriber in transcribers:
-        await analyze_user(transcriber["name"], limit, from_newest, prioritize_new)
-
-
 async def analyze_user(user, limit=100, from_newest=False, prioritize_new=True):
     gamma_changed = True
 
@@ -595,6 +543,60 @@ async def announce_gamma(user, before, after):
             "Congratulations for being one of the first.",
         )
 
+
+async def analyze_priority_users(limit=100, from_newest=False, prioritize_new=True, delay=1.0):
+    """
+    Analyzes the most active users (the users with the most transcriptions in the last week).
+    """
+    if limit > 100:
+        raise UserWarning(batch_one_hundred)
+
+    async with database.get_connection() as connection:
+        # Gets the 25 transcribers with the most transcriptions in the last week
+        transcribers = await connection.fetch(
+            """
+            SELECT transcriber AS name
+            FROM (
+                SELECT transcriber, SUM(new_gamma - old_gamma) AS gamma
+                FROM gammas
+                WHERE time > (NOW() - interval '1 week')
+                GROUP BY transcriber
+                ORDER BY gamma DESC
+                LIMIT 25
+            ) AS accumulated
+            WHERE gamma > 5;
+            """
+        )
+
+    for transcriber in transcribers:
+        await analyze_user(transcriber["name"], limit, from_newest, prioritize_new)
+
+
+async def analyze_all_users(limit=100, from_newest=False, prioritize_new=True):
+    if limit > 100:
+        raise UserWarning(batch_one_hundred)
+
+    async with database.get_connection() as connection:
+        transcribers = await connection.fetch(
+            """
+            SELECT
+                COALESCE(transcriber, name) AS name
+                FROM (
+                    SELECT transcriber
+                    FROM gammas
+                    WHERE time > NOW() - interval '24 hours'
+                    GROUP BY transcriber
+                    ORDER BY SUM(new_gamma - old_gamma) DESC
+                ) top_gammas
+                RIGHT OUTER JOIN transcribers ON name = transcriber
+                ORDER BY transcriber;
+            """
+        )
+
+    for transcriber in transcribers:
+        await analyze_user(transcriber["name"], limit, from_newest, prioritize_new)
+
+
 async def all_user_loop(delay=30):
     "Loops the analysis of all users."
     while True:
@@ -606,6 +608,7 @@ async def all_user_loop(delay=30):
         logging.info(f"--- All User Round End ({duration}) ---")
         await asyncio.sleep(delay)
 
+
 async def priority_user_loop(delay=30):
     "Loops the analysis of priority users."
     while True:
@@ -616,6 +619,7 @@ async def priority_user_loop(delay=30):
         duration = end - start
         logging.info(f"--- Priority User Round End ({duration}) ---")
         await asyncio.sleep(delay)
+
 
 async def main():
     await database.create_pool()
