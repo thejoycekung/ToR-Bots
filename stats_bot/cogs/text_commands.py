@@ -404,7 +404,7 @@ class TextCommands(commands.Cog):
 
     @commands.command()
     async def progress(
-        self, ctx, redditor: typing.Optional[Redditor] = None, hours: int = 24
+        self, ctx, redditor: typing.Optional[Redditor] = None, hours: float = 24.0
     ):
         """
         Returns your progress along the 100/24 way
