@@ -26,6 +26,7 @@ class FlairRank:
         gamma_str = f"{self.lower_bound}+" if self.upper_bound is None else f"{self.lower_bound}-{self.upper_bound}"
         return f"{self.name} ({gamma_str})"
 
+
 VISITOR = FlairRank("Visitor", "gray", 0, 0)
 INITIATE = FlairRank("Initiate", "white", 1, 49)
 GREEN = FlairRank("Green", "green", 50, 99)
@@ -54,7 +55,7 @@ RANK_LIST = [
 ]
 
 
-def get_cur_flair_rank(gamma: int) -> FlairRank:
+def get_cur_rank(gamma: int) -> FlairRank:
     """
     Determines the current flair rank based on the current gamma score.
     """
@@ -65,8 +66,30 @@ def get_cur_flair_rank(gamma: int) -> FlairRank:
     return VISITOR
 
 
-def get_valid_flair_ranks(gamma: int) -> List[FlairRank]:
+def get_valid_ranks(gamma: int) -> List[FlairRank]:
     """
     Determines all valid flair ranks for the given gamma score.
     """
     return [rank for rank in RANK_LIST if rank.passed_rank(gamma)]
+
+
+def try_get_rank_by_name(name: str) -> Optional[FlairRank]:
+    """
+    Tries to find a rank with the given name (case insensitive).
+    """
+    for rank in RANK_LIST:
+        if name.casefold() == rank.name.casefold():
+            return rank
+    
+    return None
+
+
+def try_get_rank_by_threshold(threshold: int) -> Optional[FlairRank]:
+    """
+    Tries to find the rank with the given threshold (lower bound).
+    """
+    for rank in RANK_LIST:
+        if rank.lower_bound == threshold:
+            return rank
+    
+    return None

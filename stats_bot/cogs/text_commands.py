@@ -1,4 +1,5 @@
 import html
+from stats_bot.ranks import try_get_rank_by_name, try_get_rank_by_threshold
 import typing
 
 import discord
@@ -20,19 +21,6 @@ reddit = praw.Reddit(
     user_agent="Lornebot 0.0.1",
     check_for_async=False
 )
-
-gamma_ranks = {
-    "initiate": 1,
-    "green": 50,
-    "teal": 100,
-    "purple": 250,
-    "gold": 500,
-    "diamond": 1000,
-    "ruby": 2500,
-    "topaz": 5000,
-    "jade": 10000,
-    "sapphire": 25000,
-}
 
 
 def minutes_to_human_readable(minutes):
@@ -512,12 +500,18 @@ class TextCommands(commands.Cog):
                 await ctx.send("Please input a valid integer!")
                 return
         else:
-            rank = future_gamma.casefold()
-            if rank not in gamma_ranks:
+            rank = try_get_rank_by_name(future_gamma)
+            if rank is None:
                 await ctx.send("That's not a valid rank or number.")
                 return
 
-            future_gamma = gamma_ranks[rank]
+            future_gamma = rank.lower_bound
+        
+        # If the gamma is a specific rank, include the rank name in the output
+        future_gamma_str = f"Γ {future_gamma}"
+        rank = try_get_rank_by_threshold(future_gamma)
+        if rank is not None:
+            future_gamma_str = f"{rank.name} (Γ {rank.lower_bound})"
 
         name = get_redditor_name(ctx.message.author.display_name)
 
@@ -547,7 +541,7 @@ class TextCommands(commands.Cog):
             motivation = (
                 "to get your butt into gear and start transcribing ;)"
                 if ctx.message.author.id == "280001404020588544"  # is person jabba?
-                else f"to get to Γ {future_gamma} "
+                else f"to get to {future_gamma_str} "
                 "(you haven't done any in the past 48 hours)"
             )
 
@@ -569,7 +563,7 @@ class TextCommands(commands.Cog):
         await ctx.send(
             (
                 f"From your rate over the past 48 hours, I estimate that it will take "
-                f"you `{human_time}` to get from Γ{gamma} to Γ{future_gamma}"
+                f"you `{human_time}` to get from Γ {gamma} to {future_gamma_str}"
             )
         )
 
