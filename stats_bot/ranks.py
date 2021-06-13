@@ -30,7 +30,7 @@ class FlairRank:
 VISITOR = FlairRank("Visitor", "#a6a6a6", 0, 0)
 
 INITIATE = FlairRank("Initiate", "#ffffff", 1, 49)
-GREEN = FlairRank("Green", "#00cc00", 50, 99)
+GREEN = FlairRank("Green", "#00ff00", 50, 99)
 TEAL = FlairRank("Teal", "#00cccc", 100, 249)
 PURPLE = FlairRank("Purple", "#ff67ff", 250, 499)
 GOLD = FlairRank("Gold", "#ffd700", 500, 999)
