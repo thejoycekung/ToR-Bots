@@ -26,8 +26,10 @@ class FlairRank:
         gamma_str = f"{self.lower_bound}+" if self.upper_bound is None else f"{self.lower_bound}-{self.upper_bound}"
         return f"{self.name} ({gamma_str})"
 
-VISITOR = FlairRank("Visitor", "#ffffff", 0, 0)
-INITIATE = FlairRank("Initiate", "#a6a6a6", 1, 49)
+
+VISITOR = FlairRank("Visitor", "#a6a6a6", 0, 0)
+
+INITIATE = FlairRank("Initiate", "#ffffff", 1, 49)
 GREEN = FlairRank("Green", "#00cc00", 50, 99)
 TEAL = FlairRank("Teal", "#00cccc", 100, 249)
 PURPLE = FlairRank("Purple", "#ff67ff", 250, 499)
@@ -40,7 +42,6 @@ SAPPHIRE = FlairRank("Sapphire", "#99afef", 25000)
 
 
 RANK_LIST = [
-    VISITOR,
     INITIATE,
     GREEN,
     TEAL,
