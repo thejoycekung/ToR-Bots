@@ -104,7 +104,7 @@ async def plot_multi_history(
         end += datetime.timedelta(days=1)
 
     most = 0
-    cols = ["black", "green", "red", "teal", "purple", "gold", "deeppink", "orangered", "forestgreen", "royalblue"]
+    cols = [rank.color for rank in RANK_LIST]
 
     for i, redditor in enumerate(redditors):
         if isinstance(redditor, praw.models.Redditor):

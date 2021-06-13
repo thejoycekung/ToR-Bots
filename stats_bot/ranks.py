@@ -26,18 +26,17 @@ class FlairRank:
         gamma_str = f"{self.lower_bound}+" if self.upper_bound is None else f"{self.lower_bound}-{self.upper_bound}"
         return f"{self.name} ({gamma_str})"
 
-
-VISITOR = FlairRank("Visitor", "gray", 0, 0)
-INITIATE = FlairRank("Initiate", "white", 1, 49)
-GREEN = FlairRank("Green", "green", 50, 99)
-TEAL = FlairRank("Teal", "teal", 100, 249)
-PURPLE = FlairRank("Purple", "purple", 250, 499)
-GOLD = FlairRank("Gold", "gold", 500, 999)
-DIAMOND = FlairRank("Diamond", "diamond", 1000, 2499)
-RUBY = FlairRank("Ruby", "ruby", 2500, 4999)
-TOPAZ = FlairRank("Topaz", "topaz", 5000, 9999)
-JADE = FlairRank("Jade", "jade", 10000, 24999)
-SAPPHIRE = FlairRank("Sapphire", "sapphire", 25000)
+VISITOR = FlairRank("Visitor", "#ffffff", 0, 0)
+INITIATE = FlairRank("Initiate", "#a6a6a6", 1, 49)
+GREEN = FlairRank("Green", "#00cc00", 50, 99)
+TEAL = FlairRank("Teal", "#00cccc", 100, 249)
+PURPLE = FlairRank("Purple", "#ff67ff", 250, 499)
+GOLD = FlairRank("Gold", "#ffd700", 500, 999)
+DIAMOND = FlairRank("Diamond", "#add8e6", 1000, 2499)
+RUBY = FlairRank("Ruby", "#ff7ac2", 2500, 4999)
+TOPAZ = FlairRank("Topaz", "#ff7d4d", 5000, 9999)
+JADE = FlairRank("Jade", "#31c831", 10000, 24999)
+SAPPHIRE = FlairRank("Sapphire", "#99afef", 25000)
 
 
 RANK_LIST = [
