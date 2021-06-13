@@ -1,5 +1,6 @@
 import datetime
 import io
+from stats_bot.ranks import RANK_LIST, get_valid_ranks
 import typing
 
 import matplotlib
@@ -144,32 +145,10 @@ async def plot_multi_history(
 
         plot.plot(times, values, color=cols[i % len(cols)])
 
-    if whole or most >= 50:
-        plot.axhline(y=50, color="lime")
+    ranks_to_plot = RANK_LIST if whole else get_valid_ranks(most)
 
-    if whole or most >= 100:
-        plot.axhline(y=100, color="teal")
-
-    if whole or most >= 250:
-        plot.axhline(y=250, color="purple")
-
-    if whole or most >= 500:
-        plot.axhline(y=500, color="gold")
-
-    if whole or most >= 1000:
-        plot.axhline(y=1000, color="aqua")
-
-    if whole or most >= 2500:
-        plot.axhline(y=2500, color="deeppink")
-
-    if whole or most >= 5000:
-        plot.axhline(y=5000, color="orangered")
-
-    if whole or most >= 10000:
-        plot.axhline(y=10000, color="forestgreen")
-    
-    if whole or most >= 25000:
-        plot.axhline(y=25000, color="royalblue")
+    for rank in ranks_to_plot:
+        plot.axhline(y=rank.lower_bound, color=rank.color)
 
     plot.xlabel("Time")
     plot.ylabel("Gammas")
@@ -414,35 +393,12 @@ async def plot_history(
         values.append(total_gamma)
 
     plot.plot(times, values, color=text_color)
-    first = values[0]
     last = values[-1]
 
-    if whole or first <= 50 < last:
-        plot.axhline(y=50, color="lime")
+    ranks_to_plot = RANK_LIST if whole else get_valid_ranks(last)
 
-    if whole or first <= 100 < last:
-        plot.axhline(y=100, color="teal")
-
-    if whole or first <= 250 < last:
-        plot.axhline(y=250, color="purple")
-
-    if whole or first <= 500 < last:
-        plot.axhline(y=500, color="gold")
-
-    if whole or first <= 1000 < last:
-        plot.axhline(y=1000, color="aqua")
-
-    if whole or last >= 2500:
-        plot.axhline(y=2500, color="deeppink")
-    
-    if whole or last >= 5000:
-        plot.axhline(y=5000, color="orangered")
-    
-    if whole or last >= 10000:
-        plot.axhline(y=10000, color="forestgreen")
-    
-    if whole or last >= 25000:
-        plot.axhline(y=25000, color="royalblue")
+    for rank in ranks_to_plot:
+        plot.axhline(y=rank.lower_bound, color=rank.color)
 
     plot.xlabel("Time")
     plot.ylabel("Gammas")
