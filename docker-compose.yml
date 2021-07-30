@@ -23,7 +23,5 @@ services:
         restart: always
         ports:
             - "5432:5432"
-        environment:
-            POSTGRES_PASSWORD: GrCUGqsH43tggkym
         volumes:
             - "./pg_data:/var/lib/postgresql/data"
