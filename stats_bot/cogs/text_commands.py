@@ -64,7 +64,7 @@ class TextCommands(commands.Cog):
 
         if stats is None or len(stats) != 10:
             if redditor is None or username.casefold() == author.casefold():
-                await ctx.send("I'm working on adding you!")
+                await ctx.send("I'm working on adding you! The first time you run this command, it takes around an hour for the bot to fetch your data. Check back soon!")
                 await add_user(username, ctx.message.author.id)
             else:
                 await ctx.send("I don't know that user, sorry!")
