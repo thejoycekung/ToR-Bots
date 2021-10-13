@@ -29,7 +29,8 @@ class FlairRank:
 
 VISITOR = FlairRank("Visitor", "#a6a6a6", 0, 0)
 
-INITIATE = FlairRank("Initiate", "#ffffff", 1, 49)
+INITIATE = FlairRank("Initiate", "#ffffff", 1, 24)
+PINK = FlairRank("Pink", "#e696be", 25, 49)
 GREEN = FlairRank("Green", "#00ff00", 50, 99)
 TEAL = FlairRank("Teal", "#00cccc", 100, 249)
 PURPLE = FlairRank("Purple", "#ff67ff", 250, 499)
@@ -38,11 +39,12 @@ DIAMOND = FlairRank("Diamond", "#add8e6", 1000, 2499)
 RUBY = FlairRank("Ruby", "#ff7ac2", 2500, 4999)
 TOPAZ = FlairRank("Topaz", "#ff7d4d", 5000, 9999)
 JADE = FlairRank("Jade", "#31c831", 10000, 24999)
-SAPPHIRE = FlairRank("Sapphire", "#99afef", 25000)
+SAPPHIRE = FlairRank("Sapphire", "#99afef", 20000)
 
 
 RANK_LIST = [
     INITIATE,
+    PINK,
     GREEN,
     TEAL,
     PURPLE,
