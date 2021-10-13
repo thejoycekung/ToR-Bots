@@ -14,6 +14,16 @@ from ..helpers import text_color
 
 matplotlib.use("AGG")
 
+
+def fix_labels(labels: typing.List[str]) -> typing.List[str]:
+    """Fix labels not showing up correctly.
+    
+    Labels starting with an underscore are hidden by default in matplotlib.
+    We add a space in front of all labels to prevent this issue.
+    """
+    return [f" {label}" for label in labels]
+
+
 async def plot_all_history(
     start: typing.Union[datetime.date, str] = None,
     end: typing.Union[datetime.date, str] = None,
@@ -154,7 +164,7 @@ async def plot_multi_history(
     plot.ylabel("Gammas")
     plot.xticks(rotation=90)
     plot.title("Multi-gamma history")
-    plot.legend(redditors)
+    plot.legend(fix_labels(redditors))
 
     plot.gcf().subplots_adjust(bottom=0.3)
 
