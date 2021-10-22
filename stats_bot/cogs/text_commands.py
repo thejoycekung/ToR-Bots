@@ -492,7 +492,7 @@ class TextCommands(commands.Cog):
         await ctx.send(progress)
 
     @commands.command(aliases=["to"])
-    async def until(self, ctx, future_gamma: str):
+    async def until(self, ctx, future_gamma: str, redditor: Redditor = None):
         if future_gamma.isdigit():
             try:
                 future_gamma = int(future_gamma)
@@ -513,7 +513,11 @@ class TextCommands(commands.Cog):
         if rank is not None:
             future_gamma_str = f"{rank.name} (Γ {rank.lower_bound})"
 
-        name = get_redditor_name(ctx.message.author.display_name)
+        name = (
+            redditor.name
+            if redditor is not None
+            else get_redditor_name(ctx.message.author.display_name)
+        )
 
         # The transcriptions are set over 48 hours to give more accurate results
         transcription_count = await database_reader.get_last_x_hours(name, 48)
